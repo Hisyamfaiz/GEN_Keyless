@@ -1,0 +1,16 @@
+".\build\main.obj",
+".\build\hal_nrf_hw.obj",
+".\build\hal_nrf.obj",
+".\build\hal_clk.obj",
+".\build\hal_delay.obj",
+".\build\hal_aes.obj",
+".\build\hal_flash.obj",
+".\build\hal_wdog.obj",
+".\build\hal_rtc.obj",
+".\build\hal_rng.obj" 
+TO ".\build\enhanced_shockburst_ptx_nrf24le1" REGFILE (.\build\enhanced_shockburst_ptx_nrf24le1.ORC) 
+PRINT(".\lst\enhanced_shockburst_ptx_nrf24le1.m51") RAMSIZE(256) 
+DISABLEWARNING (16) 
+OVERLAY( hal_nrf_write_reg ! * )
+CODE( 0X0000-0X3FFF )
+XDATA( 0X0000-0X03FF,0XFA00-0XFFFF )
