@@ -1,0 +1,334 @@
+C51 COMPILER V9.60.0.0   HAL_AES                                                           06/05/2020 14:49:12 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE HAL_AES
+OBJECT MODULE PLACED IN .\build\hal_aes.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE ..\hal\nrf24le1\hal_aes.c OPTIMIZE(8,SPEED) REGFILE(.\build\enhanced_sho
+                    -ckburst_ptx_nrf24le1.ORC) BROWSE NOINTPROMOTE MODDP2 INCDIR(..\hal\nrf24le1;..\hal\nrf24l01p;..\hal;..\compiler\c51;..\c
+                    -ompiler\common) DEFINE(MCU_NRF24LE1) DEBUG OBJECTEXTEND PRINT(.\lst\hal_aes.lst) TABS(2) OBJECT(.\build\hal_aes.obj)
+
+line level    source
+
+   1          /* Copyright (c) 2009 Nordic Semiconductor. All Rights Reserved.
+   2           *
+   3           * The information contained herein is confidential property of Nordic
+   4           * Semiconductor ASA.Terms and conditions of usage are described in detail
+   5           * in NORDIC SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
+   6           *
+   7           * Licensees are granted free, non-transferable use of the information. NO
+   8           * WARRENTY of ANY KIND is provided. This heading must NOT be removed from
+   9           * the file.
+  10           *
+  11           * $LastChangedRevision: 2368 $
+  12           */
+  13          
+  14          /** @file
+  15          * @brief Implementation of hal_aes
+  16           *
+  17           * @details This file contains functions for using the AES crytographic in software
+  18           * utilizing the hardware support provided in nRF24LE1. This version only
+  19           * supports ECB encryption mode of operation.
+  20           */
+  21          
+  22          //lint -e438
+  23          
+  24          #include "hal_aes.h"
+  25          #include "nrf24le1.h"
+  26          
+  27          /*----------------------- AES Parameters -------------------------------------*/
+  28          static uint8_t xdata cipher_key[16];    //AES key
+  29          
+  30          //These should be placed in fast RAM
+  31          static uint8_t pdata aes_round_key[16]; //AES Round Key
+  32          
+  33          /*----------------------- AES Encryption Functions ---------------------------*/
+  34          static void mix_columns_hw(uint8_t data * aes_state);
+  35          static void add_sub_shift(uint8_t data * aes_state);
+  36          static void add_key(uint8_t data * aes_state);
+  37          static void aes_set_key(const uint8_t * key_bytes);
+  38          static void key_upgrade(uint8_t round);
+  39          
+  40          /*----------------------- AES STATIC values ----------------------------------*/
+  41          static uint8_t const code s_box[256] = {
+  42           99, 124, 119, 123, 242, 107, 111, 197,  48,   1, 103,  43, 254, 215, 171, 118,
+  43          202, 130, 201, 125, 250,  89,  71, 240, 173, 212, 162, 175, 156, 164, 114, 192,
+  44          183, 253, 147,  38,  54,  63, 247, 204,  52, 165, 229, 241, 113, 216,  49,  21,
+  45            4, 199,  35, 195,  24, 150,   5, 154,   7,  18, 128, 226, 235,  39, 178, 117,
+  46            9, 131,  44,  26,  27, 110,  90, 160,  82,  59, 214, 179,  41, 227,  47, 132,
+  47           83, 209,   0, 237,  32, 252, 177,  91, 106, 203, 190,  57,  74,  76,  88, 207,
+  48          208, 239, 170, 251,  67,  77,  51, 133,  69, 249,   2, 127,  80,  60, 159, 168,
+  49           81, 163,  64, 143, 146, 157,  56, 245, 188, 182, 218,  33,  16, 255, 243, 210,
+  50          205,  12,  19, 236,  95, 151,  68,  23, 196, 167, 126,  61, 100,  93,  25, 115,
+  51           96, 129,  79, 220,  34,  42, 144, 136,  70, 238, 184,  20, 222,  94,  11, 219,
+  52          224,  50,  58,  10,  73,   6,  36,  92, 194, 211, 172,  98, 145, 149, 228, 121,
+  53          231, 200,  55, 109, 141, 213,  78, 169, 108,  86, 244, 234, 101, 122, 174,   8,
+C51 COMPILER V9.60.0.0   HAL_AES                                                           06/05/2020 14:49:12 PAGE 2   
+
+  54          186, 120,  37,  46,  28, 166, 180, 198, 232, 221, 116,  31,  75, 189, 139, 138,
+  55          112,  62, 181, 102,  72,   3, 246,  14,  97,  53,  87, 185, 134, 193,  29, 158,
+  56          225, 248, 152,  17, 105, 217, 142, 148, 155,  30, 135, 233, 206,  85,  40, 223,
+  57          140, 161, 137,  13, 191, 230,  66, 104,  65, 153,  45,  15, 176,  84, 187,  22,
+  58          };
+  59          
+  60          static uint8_t const code rcon[]={
+  61          0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36};
+  62          
+  63          /*----------------------- AES API --------------------------------------------*/
+  64          void hal_aes_setup(bool decrypt, aes_modes_t mode, const uint8_t *keyin, const uint8_t *ivin)
+  65          {
+  66   1        aes_set_key(keyin);
+  67   1      
+  68   1        //lint -save -e438
+  69   1        // Not used in LE1, included to prevent compile-warnings------ |
+  70   1        decrypt = decrypt;                                          // |
+  71   1        mode = mode;                                                // |
+  72   1        ivin = ivin;                                                // |
+  73   1        //-------------------------------------------------------------|
+  74   1        //lint -restore
+  75   1      }
+  76          
+  77          #ifdef __ICC8051__
+               static uint8_t data aes_state[16];      //AES State
+              #endif  
+  80          
+  81          void hal_aes_crypt(uint8_t * dest_buf, const uint8_t * src_buf)
+  82          {
+  83   1      #ifdef __C51__
+  84   1        uint8_t data aes_state[16];      //AES State
+  85   1      #endif
+  86   1      
+  87   1        uint8_t a;
+  88   1        for(a=0;a<16;a++)
+  89   1        {
+  90   2          aes_state[a] = src_buf[a];
+  91   2        }
+  92   1      
+  93   1        //Start
+  94   1        CCPDATIB = 0x02;  //Set co-prosessor the GF(2^8)*2 (used in mix-colums)
+  95   1        for (a=0;a<9;a++)
+  96   1        {
+  97   2          add_sub_shift(aes_state);
+  98   2          mix_columns_hw(aes_state);
+  99   2          key_upgrade(a);
+ 100   2        }
+ 101   1      
+ 102   1        //FINAL round
+ 103   1        add_sub_shift(aes_state);
+ 104   1        key_upgrade(9);
+ 105   1        add_key(aes_state);
+ 106   1      
+ 107   1        //Clean up
+ 108   1        for(a=0;a<16;a++)
+ 109   1        {
+ 110   2          aes_round_key[a]=cipher_key[a]; //Write back cipher-key
+ 111   2          dest_buf[a] = aes_state[a];     //Write out encrypted result
+ 112   2        }
+ 113   1      }
+ 114          /*----------------------- Private AES Encryption Functions -------------------*/
+ 115          static void aes_set_key(const uint8_t * key_bytes)
+C51 COMPILER V9.60.0.0   HAL_AES                                                           06/05/2020 14:49:12 PAGE 3   
+
+ 116          {
+ 117   1        uint8_t k;
+ 118   1        for (k=0;k<16;k++)
+ 119   1        {
+ 120   2          cipher_key[k]=aes_round_key[k]=key_bytes[k];
+ 121   2        }
+ 122   1      }
+ 123          
+ 124          static void add_key(uint8_t data * aes_state)
+ 125          {
+ 126   1        aes_state[0]^=aes_round_key[0];
+ 127   1        aes_state[1]^=aes_round_key[1];
+ 128   1        aes_state[2]^=aes_round_key[2];
+ 129   1        aes_state[3]^=aes_round_key[3];
+ 130   1        aes_state[4]^=aes_round_key[4];
+ 131   1        aes_state[5]^=aes_round_key[5];
+ 132   1        aes_state[6]^=aes_round_key[6];
+ 133   1        aes_state[7]^=aes_round_key[7];
+ 134   1        aes_state[8]^=aes_round_key[8];
+ 135   1        aes_state[9]^=aes_round_key[9];
+ 136   1        aes_state[10]^=aes_round_key[10];
+ 137   1        aes_state[11]^=aes_round_key[11];
+ 138   1        aes_state[12]^=aes_round_key[12];
+ 139   1        aes_state[13]^=aes_round_key[13];
+ 140   1        aes_state[14]^=aes_round_key[14];
+ 141   1        aes_state[15]^=aes_round_key[15];
+ 142   1      }
+ 143          
+ 144          static void key_upgrade(uint8_t round)
+ 145          {
+ 146   1        aes_round_key[0]=s_box[aes_round_key[13]]^aes_round_key[0]^rcon[round+1];
+ 147   1        aes_round_key[1]=s_box[aes_round_key[14]]^aes_round_key[1];
+ 148   1        aes_round_key[2]=s_box[aes_round_key[15]]^aes_round_key[2];
+ 149   1        aes_round_key[3]=s_box[aes_round_key[12]]^aes_round_key[3];
+ 150   1      
+ 151   1        aes_round_key[4]=aes_round_key[0]^aes_round_key[4];
+ 152   1        aes_round_key[5]=aes_round_key[1]^aes_round_key[5];
+ 153   1        aes_round_key[6]=aes_round_key[2]^aes_round_key[6];
+ 154   1        aes_round_key[7]=aes_round_key[3]^aes_round_key[7];
+ 155   1      
+ 156   1        aes_round_key[8]=aes_round_key[4]^aes_round_key[8];
+ 157   1        aes_round_key[9]=aes_round_key[5]^aes_round_key[9];
+ 158   1        aes_round_key[10]=aes_round_key[6]^aes_round_key[10];
+ 159   1        aes_round_key[11]=aes_round_key[7]^aes_round_key[11];
+ 160   1      
+ 161   1        aes_round_key[12]=aes_round_key[8]^aes_round_key[12];
+ 162   1        aes_round_key[13]=aes_round_key[9]^aes_round_key[13];
+ 163   1        aes_round_key[14]=aes_round_key[10]^aes_round_key[14];
+ 164   1        aes_round_key[15]=aes_round_key[11]^aes_round_key[15];
+ 165   1      }
+ 166          
+ 167          static void add_sub_shift(uint8_t data * aes_state)
+ 168          {
+ 169   1        uint8_t row[2];
+ 170   1      
+ 171   1        aes_state[0]=s_box[aes_state[0]^aes_round_key[0]];
+ 172   1        aes_state[4]=s_box[aes_state[4]^aes_round_key[4]];
+ 173   1        aes_state[8]=s_box[aes_state[8]^aes_round_key[8]];
+ 174   1        aes_state[12]=s_box[aes_state[12]^aes_round_key[12]];
+ 175   1      
+ 176   1        row[0]=s_box[aes_state[1]^aes_round_key[1]];
+ 177   1        aes_state[1]=s_box[aes_state[5]^aes_round_key[5]];
+C51 COMPILER V9.60.0.0   HAL_AES                                                           06/05/2020 14:49:12 PAGE 4   
+
+ 178   1        aes_state[5]=s_box[aes_state[9]^aes_round_key[9]];
+ 179   1        aes_state[9]=s_box[aes_state[13]^aes_round_key[13]];
+ 180   1        aes_state[13]=row[0];
+ 181   1      
+ 182   1        row[0]=s_box[aes_state[2]^aes_round_key[2]];
+ 183   1        row[1]=s_box[aes_state[6]^aes_round_key[6]];
+ 184   1        aes_state[2]=s_box[aes_state[10]^aes_round_key[10]];
+ 185   1        aes_state[6]=s_box[aes_state[14]^aes_round_key[14]];
+ 186   1        aes_state[10]=row[0];
+ 187   1        aes_state[14]=row[1];
+ 188   1      
+ 189   1        row[0]=s_box[aes_state[15]^aes_round_key[15]];
+ 190   1        aes_state[15]=s_box[aes_state[11]^aes_round_key[11]];
+ 191   1        aes_state[11]=s_box[aes_state[7]^aes_round_key[7]];
+ 192   1        aes_state[7]=s_box[aes_state[3]^aes_round_key[3]];
+ 193   1        aes_state[3]=row[0];
+ 194   1      }
+ 195          
+ 196          static void mix_columns_hw(uint8_t data * aes_state)
+ 197          {
+ 198   1        uint8_t col,r,tmp;
+ 199   1        /*
+ 200   1        This function operates on the columns of the state. Each column is subject to the
+ 201   1        following transform (in vector and matrix notation):
+ 202   1        (b0)   (2 3 1 1)   (a0)
+ 203   1        (b1) = (1 2 3 1) * (a1)
+ 204   1        (b2)   (1 1 2 3)   (a2)
+ 205   1        (b3)   (3 1 1 2)   (a3)
+ 206   1        Here the vector a is a column of the state before the mix columns operation, and
+ 207   1        b is the same column after the operation. We use hardware to perform the
+ 208   1        multiplication in GF(2^8).
+ 209   1        */
+ 210   1      
+ 211   1        tmp=aes_state[3+0]^aes_state[2+0]^aes_state[1+0]^aes_state[0];
+ 212   1        //tmp = a0 + a1 + a2 + a3 (in modular aritmetic)
+ 213   1        col=aes_state[0];
+ 214   1      
+ 215   1        CCPDATIA = aes_state[0]^aes_state[1+0];
+ 216   1        r=CCPDATO;
+ 217   1        //r = 2*(a0 + a1)
+ 218   1        aes_state[0]= r^tmp^(aes_state[0]);
+ 219   1        //b0 = 3a0 + 3a1 + a2 +a3 - a0 = 2a0 +3a1 + a2 + a3
+ 220   1      
+ 221   1        CCPDATIA = aes_state[1+0]^aes_state[2+0];
+ 222   1        r=CCPDATO;
+ 223   1        //r = 2*(a1 + a2)
+ 224   1        aes_state[1+0]= r^tmp^(aes_state[1+0]);
+ 225   1        //b1 = a0 + 3a1 + 3a2 +a3 - a1 = a0 +2a1 + 3a2 + a3
+ 226   1      
+ 227   1        CCPDATIA = aes_state[2+0]^aes_state[3+0];
+ 228   1        r=CCPDATO;
+ 229   1        //r = 2*(a2 + a3)
+ 230   1        aes_state[2+0]= r^tmp^(aes_state[2+0]);
+ 231   1        //b2 = a0 + a1 + 3a2 +3a3 - a2 = a0 +a1 + 2a2 + 3a3
+ 232   1      
+ 233   1        CCPDATIA = aes_state[3+0]^col;
+ 234   1        r=CCPDATO;
+ 235   1        //r = 2*(a3 + a0)
+ 236   1        aes_state[3+0]= r^tmp^(aes_state[3+0]);
+ 237   1        //b3 = 3a0 + a1 + a2 +3a3 - a3 = 3a0 +a1 + a2 + 2a3
+ 238   1      
+ 239   1      
+C51 COMPILER V9.60.0.0   HAL_AES                                                           06/05/2020 14:49:12 PAGE 5   
+
+ 240   1        tmp=aes_state[3+4]^aes_state[2+4]^aes_state[1+4]^aes_state[4];
+ 241   1        col=aes_state[4];
+ 242   1      
+ 243   1        CCPDATIA = aes_state[4]^aes_state[1+4];
+ 244   1        r=CCPDATO;
+ 245   1        aes_state[4]= r^tmp^(aes_state[4]);
+ 246   1      
+ 247   1        CCPDATIA = aes_state[1+4]^aes_state[2+4];
+ 248   1        r=CCPDATO;
+ 249   1        aes_state[1+4]= r^tmp^(aes_state[1+4]);
+ 250   1      
+ 251   1        CCPDATIA = aes_state[2+4]^aes_state[3+4];
+ 252   1        r=CCPDATO;
+ 253   1        aes_state[2+4]= r^tmp^(aes_state[2+4]);
+ 254   1      
+ 255   1        CCPDATIA = aes_state[3+4]^col;
+ 256   1        r=CCPDATO;
+ 257   1        aes_state[3+4]= r^tmp^(aes_state[3+4]);
+ 258   1      
+ 259   1      
+ 260   1        tmp=aes_state[3+8]^aes_state[2+8]^aes_state[1+8]^aes_state[8];
+ 261   1        col=aes_state[8];
+ 262   1      
+ 263   1        CCPDATIA = aes_state[8]^aes_state[1+8];
+ 264   1        r=CCPDATO;
+ 265   1        aes_state[8]= r^tmp^(aes_state[8]);
+ 266   1      
+ 267   1        CCPDATIA = aes_state[1+8]^aes_state[2+8];
+ 268   1        r=CCPDATO;
+ 269   1        aes_state[1+8]= r^tmp^(aes_state[1+8]);
+ 270   1      
+ 271   1        CCPDATIA = aes_state[2+8]^aes_state[3+8];
+ 272   1        r=CCPDATO;
+ 273   1        aes_state[2+8]= r^tmp^(aes_state[2+8]);
+ 274   1      
+ 275   1        CCPDATIA = aes_state[3+8]^col;
+ 276   1        r=CCPDATO;
+ 277   1        aes_state[3+8]= r^tmp^(aes_state[3+8]);
+ 278   1      
+ 279   1      
+ 280   1        tmp=aes_state[3+12]^aes_state[2+12]^aes_state[1+12]^aes_state[12];
+ 281   1        col=aes_state[12];
+ 282   1      
+ 283   1        CCPDATIA =aes_state[12]^aes_state[1+12];
+ 284   1        r=CCPDATO;
+ 285   1        aes_state[12]= r^tmp^(aes_state[12]);
+ 286   1      
+ 287   1        CCPDATIA = aes_state[1+12]^aes_state[2+12];
+ 288   1        r=CCPDATO;
+ 289   1        aes_state[1+12]= r^tmp^(aes_state[1+12]);
+ 290   1      
+ 291   1        CCPDATIA =aes_state[2+12]^aes_state[3+12];
+ 292   1        r=CCPDATO;
+ 293   1        aes_state[2+12]= r^tmp^(aes_state[2+12]);
+ 294   1      
+ 295   1        CCPDATIA = aes_state[3+12]^col;
+ 296   1        r=CCPDATO;
+ 297   1        aes_state[3+12]= r^tmp^(aes_state[3+12]);
+ 298   1      }
+ 299          
+
+
+C51 COMPILER V9.60.0.0   HAL_AES                                                           06/05/2020 14:49:12 PAGE 6   
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1319    ----
+   CONSTANT SIZE    =    267    ----
+   XDATA SIZE       =     16    ----
+   PDATA SIZE       =     16    ----
+   DATA SIZE        =   ----      36
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
