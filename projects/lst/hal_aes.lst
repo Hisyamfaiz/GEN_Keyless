@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   HAL_AES                                                           06/05/2020 14:49:12 PAGE 1   
+C51 COMPILER V9.60.0.0   HAL_AES                                                           08/20/2020 11:05:23 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE HAL_AES
@@ -62,7 +62,7 @@ line level    source
   51           96, 129,  79, 220,  34,  42, 144, 136,  70, 238, 184,  20, 222,  94,  11, 219,
   52          224,  50,  58,  10,  73,   6,  36,  92, 194, 211, 172,  98, 145, 149, 228, 121,
   53          231, 200,  55, 109, 141, 213,  78, 169, 108,  86, 244, 234, 101, 122, 174,   8,
-C51 COMPILER V9.60.0.0   HAL_AES                                                           06/05/2020 14:49:12 PAGE 2   
+C51 COMPILER V9.60.0.0   HAL_AES                                                           08/20/2020 11:05:23 PAGE 2   
 
   54          186, 120,  37,  46,  28, 166, 180, 198, 232, 221, 116,  31,  75, 189, 139, 138,
   55          112,  62, 181, 102,  72,   3, 246,  14,  97,  53,  87, 185, 134, 193,  29, 158,
@@ -126,7 +126,7 @@ line level    source
  113   1      }
  114          /*----------------------- Private AES Encryption Functions -------------------*/
  115          static void aes_set_key(const uint8_t * key_bytes)
-C51 COMPILER V9.60.0.0   HAL_AES                                                           06/05/2020 14:49:12 PAGE 3   
+C51 COMPILER V9.60.0.0   HAL_AES                                                           08/20/2020 11:05:23 PAGE 3   
 
  116          {
  117   1        uint8_t k;
@@ -190,7 +190,7 @@ line level    source
  175   1      
  176   1        row[0]=s_box[aes_state[1]^aes_round_key[1]];
  177   1        aes_state[1]=s_box[aes_state[5]^aes_round_key[5]];
-C51 COMPILER V9.60.0.0   HAL_AES                                                           06/05/2020 14:49:12 PAGE 4   
+C51 COMPILER V9.60.0.0   HAL_AES                                                           08/20/2020 11:05:23 PAGE 4   
 
  178   1        aes_state[5]=s_box[aes_state[9]^aes_round_key[9]];
  179   1        aes_state[9]=s_box[aes_state[13]^aes_round_key[13]];
@@ -254,7 +254,7 @@ line level    source
  237   1        //b3 = 3a0 + a1 + a2 +3a3 - a3 = 3a0 +a1 + a2 + 2a3
  238   1      
  239   1      
-C51 COMPILER V9.60.0.0   HAL_AES                                                           06/05/2020 14:49:12 PAGE 5   
+C51 COMPILER V9.60.0.0   HAL_AES                                                           08/20/2020 11:05:23 PAGE 5   
 
  240   1        tmp=aes_state[3+4]^aes_state[2+4]^aes_state[1+4]^aes_state[4];
  241   1        col=aes_state[4];
@@ -318,7 +318,7 @@ line level    source
  299          
 
 
-C51 COMPILER V9.60.0.0   HAL_AES                                                           06/05/2020 14:49:12 PAGE 6   
+C51 COMPILER V9.60.0.0   HAL_AES                                                           08/20/2020 11:05:23 PAGE 6   
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
    CODE SIZE        =   1319    ----

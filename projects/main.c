@@ -44,7 +44,7 @@ static uint8_t xdata payload[DATA_PAIR_LENGTH];
 static uint8_t xdata payload_enc[DATA_LENGTH];
 static uint32_t idata AES_Key[4];
 static const uint8_t idata commands[3][8] = {
-	{ 0x5e, 0x6c, 0xa7, 0x74, 0xfd, 0xe3, 0xdf, 0xbc },
+	{ 0x5e, 0x6c, 0xa7, 0x74, 0xfd, 0xe3, 0xdf, 0xbc  },
 	{ 0xf7, 0xda, 0x4a, 0x4f, 0x65, 0x2d, 0x6e, 0xf0 },
 	{ 0xff, 0xa6, 0xe6, 0x5a, 0x84, 0x82, 0x66, 0x4f }
 };
@@ -71,7 +71,7 @@ void main(void){
 	uint8_t pairing_success;
 	KLESS_CMD command;
 	hal_nrf_output_power_t power;
-	
+	uint8_t test[4];
 	// Initialise GPIO
 	pin_init();
 	// Initialise RTC
@@ -82,6 +82,11 @@ void main(void){
 	// Load Flash
 	hal_flash_bytes_read(VADDR_VCU_ID, vcu_id, sizeof(uint32_t));
 	hal_flash_bytes_read(VADDR_AES_KEY, (uint8_t*)AES_Key, DATA_LENGTH);
+	if(vcu_id == 354313 ){
+		while(1){
+			LED_2 = 1;
+		}
+	}
 	
 	// Apply address
 	memcpy(tx_address, vcu_id, sizeof(uint32_t));
@@ -129,6 +134,7 @@ void main(void){
 			// Encrypt payload
 			hal_aes_crypt(payload_enc, payload);
 			// Send the payload
+//			hal_flash_bytes_read(VADDR_VCU_ID, test, 4);
 			send_payload(payload_enc, power);
 			
 			// indicator
