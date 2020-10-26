@@ -57,7 +57,7 @@ void clock_and_irq_init(void);
 void nrf_init(void);
 void sleep_mode(void);
 void make_random_number(uint8_t *p);
-bool make_command(KLESS_CMD *cmd, hal_nrf_output_power_t *pwr);
+void make_command(KLESS_CMD *cmd, hal_nrf_output_power_t *pwr);
 void make_payload(uint8_t *payload, uint8_t cmd);
 void send_payload(uint8_t *payload, uint8_t pwr);
 void set_pairing_mode(void);
@@ -98,32 +98,32 @@ void main(void){
 	hal_wdog_init(0x0300);
 
 	while(1)	{						
-		if(BTN_ALARM && BTN_SEAT){
-			// Pairing Mode
-			pairing_success = 0;
+		if(BTN_ALARM || BTN_SEAT){
 			// handle bounce effect
 			delay_ms(100);
-			
-			// Set to pairing configuration
-			set_pairing_mode();
-			// Receive mode
-			receive_pairing();
-			// Check Payload
-			update_configuration(&pairing_success);
-			// indicator result
-			if(pairing_success){
-				LED_1 = 0;
-				LED_2 = 0;
+				
+			if(BTN_ALARM && BTN_SEAT){
+				// Pairing Mode
+				pairing_success = 0;
+				
+				// Set to pairing configuration
+				set_pairing_mode();
+				// Receive mode
+				receive_pairing();
+				// Check Payload
+				update_configuration(&pairing_success);
+				// indicator result
+				if(pairing_success){
+					LED_1 = 0;
+					LED_2 = 0;
+				} else {
+					LED_1 = 1;
+					LED_2 = 1;
+				}
 			} else {
-				LED_1 = 1;
-				LED_2 = 1;
-			}
-			// Wait until button released
-			wait_button_released();
-			
-		} else {
-			// Button Command Mode				
-			if(make_command(&command, &power)) {
+				
+				// Button Command Mode				
+				make_command(&command, &power);
 				// Generate Random Number
 				make_random_number(&payload[DATA_LENGTH/2]);
 				// Insert command to payload
@@ -132,26 +132,29 @@ void main(void){
 				hal_aes_crypt(payload_enc, payload);
 				// Send the payload
 				send_payload(payload_enc, power);		
-			} 
+				// indicator
+				LED_2 = !LED_2;
+			}
 			
-			else {
-				// Normal Mode
-				set_ping_mode();
-				if (receive_ping()){
-					// Generate Command				
-					command = KLESS_CMD_PING;
-					power = HAL_NRF_18DBM;
-					// Insert command to payload
-					make_payload(payload, command);
-					// Encrypt payload
-					hal_aes_crypt(payload_enc, payload);
-					// Send the payload
-					send_payload(payload_enc, power);
-					
-					// indicator
-					LED_1 = !LED_1;
-					LED_2 = !LED_2;
-				}
+			// Wait until button released
+			wait_button_released();
+			
+		} else {
+			// Normal Mode
+			set_ping_mode();
+			if (receive_ping()){
+				// Generate Command				
+				command = KLESS_CMD_PING;
+				power = HAL_NRF_18DBM;
+				// Insert command to payload
+				make_payload(payload, command);
+				// Encrypt payload
+				hal_aes_crypt(payload_enc, payload);
+				// Send the payload
+				send_payload(payload_enc, power);
+				
+				// indicator
+				LED_1 = !LED_1;
 			}
 		}
 
@@ -165,7 +168,7 @@ void main(void){
 
 // ======================================= Function declaration
 void wait_button_released(void){
-		while((BTN_ALARM || BTN_SEAT)){
+		while(BTN_ALARM || BTN_SEAT){
 			hal_wdog_restart();
 			delay_ms(50);
 		}
@@ -211,7 +214,7 @@ void receive_pairing(void){
 		LED_2 = !LED_1;
 
 		hal_wdog_restart();
-		delay_ms(1);
+		delay_ms(100);
 	}
 	CE_LOW();
 	
@@ -295,29 +298,15 @@ void make_payload(uint8_t *payload, uint8_t cmd){
 	memcpy(payload, &commands[cmd], 8);
 }
 
-bool make_command(KLESS_CMD *cmd, hal_nrf_output_power_t *pwr){	
-	bool pressed = false;
-	
-	// Check buttons
-	if(BTN_ALARM || BTN_SEAT){
-		// handle bounce effect
-		pressed = true;
-		delay_ms(10);
-		
-		// handle each buttons
-		if(BTN_SEAT)	{
-			*cmd = KLESS_CMD_SEAT;
-			*pwr = HAL_NRF_18DBM;
-		} else if(BTN_ALARM)	{
-			*cmd = KLESS_CMD_ALARM;
-			*pwr = HAL_NRF_0DBM;
-		}		
-		
-		// Wait until button released
-		// wait_button_released();
-	}
-	
-	return pressed;
+void make_command(KLESS_CMD *cmd, hal_nrf_output_power_t *pwr){		
+	// handle each buttons
+	if(BTN_SEAT)	{
+		*cmd = KLESS_CMD_SEAT;
+		*pwr = HAL_NRF_18DBM;
+	} else if(BTN_ALARM)	{
+		*cmd = KLESS_CMD_ALARM;
+		*pwr = HAL_NRF_0DBM;
+	}		
 }
 
 void make_random_number(uint8_t *p){
