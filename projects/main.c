@@ -1,6 +1,6 @@
 /*
 * An nRF24LE1 REGISTER RETENTION TIMER ON example application
-// test new branch
+* Master
 */
 
 // ======================================= Include header
@@ -57,13 +57,15 @@ void clock_and_irq_init(void);
 void nrf_init(void);
 void sleep_mode(void);
 void make_random_number(uint8_t *p);
-void make_command(KLESS_CMD *cmd, hal_nrf_output_power_t *pwr);
+bool make_command(KLESS_CMD *cmd, hal_nrf_output_power_t *pwr);
 void make_payload(uint8_t *payload, uint8_t cmd);
 void send_payload(uint8_t *payload, uint8_t pwr);
 void set_pairing_mode(void);
 void receive_pairing(void);
 void update_configuration(uint8_t *success);
 void wait_button_released(void);
+bool receive_ping(void);
+void set_ping_mode(void);
 
 // ======================================= Main function 
 void main(void){
@@ -120,21 +122,37 @@ void main(void){
 			wait_button_released();
 			
 		} else {
-			// Normal Mode
-			// Generate Command
-			make_command(&command, &power);
-			// Generate Random Number
-			make_random_number(&payload[DATA_LENGTH/2]);
-			// Insert command to payload with random position
-			make_payload(payload, command);
-			// Encrypt payload
-			hal_aes_crypt(payload_enc, payload);
-			// Send the payload
-			send_payload(payload_enc, power);
+			// Button Command Mode				
+			if(make_command(&command, &power)) {
+				// Generate Random Number
+				make_random_number(&payload[DATA_LENGTH/2]);
+				// Insert command to payload
+				make_payload(payload, command);
+				// Encrypt payload
+				hal_aes_crypt(payload_enc, payload);
+				// Send the payload
+				send_payload(payload_enc, power);		
+			} 
 			
-			// indicator
-			LED_1 = !LED_1;
-			LED_2 = !LED_2;
+			else {
+				// Normal Mode
+				set_ping_mode();
+				if (receive_ping()){
+					// Generate Command				
+					command = KLESS_CMD_PING;
+					power = HAL_NRF_18DBM;
+					// Insert command to payload
+					make_payload(payload, command);
+					// Encrypt payload
+					hal_aes_crypt(payload_enc, payload);
+					// Send the payload
+					send_payload(payload_enc, power);
+					
+					// indicator
+					LED_1 = !LED_1;
+					LED_2 = !LED_2;
+				}
+			}
 		}
 
 		// reset wdog
@@ -193,7 +211,7 @@ void receive_pairing(void){
 		LED_2 = !LED_1;
 
 		hal_wdog_restart();
-		delay_ms(250);
+		delay_ms(1);
 	}
 	CE_LOW();
 	
@@ -201,6 +219,34 @@ void receive_pairing(void){
 	hal_nrf_set_power_mode(HAL_NRF_PWR_DOWN);
 	//setting payload width back
 	hal_nrf_set_rx_payload_width(HAL_NRF_PIPE0, DATA_LENGTH);	
+}
+
+bool receive_ping(void){
+	uint32_t ms = 0;
+	// Power up radio
+	hal_nrf_set_power_mode(HAL_NRF_PWR_UP);
+	// Configure radio as primary receiver 
+	hal_nrf_set_operation_mode(HAL_NRF_PRX); 
+	
+	// Enable receiver
+	CE_HIGH();
+	received = false;
+	while (!received && ms < 50){
+		// Indicator
+//		LED_1 = !LED_1;
+//		LED_2 = !LED_1;
+
+		delay_ms(1);
+		ms++;
+	}
+	CE_LOW();
+	
+	// Power off radio	
+	hal_nrf_set_power_mode(HAL_NRF_PWR_DOWN);
+	//setting payload width back
+	hal_nrf_set_rx_payload_width(HAL_NRF_PIPE0, DATA_LENGTH);	
+	
+	return received;
 }
 
 void set_pairing_mode(void) {
@@ -211,9 +257,14 @@ void set_pairing_mode(void) {
 	//setting Tx address
 	hal_nrf_set_address(HAL_NRF_TX, tx_address);
 	//setting Rx address for pipe0
-	hal_nrf_set_address(HAL_NRF_PIPE0,rx_address);
+	hal_nrf_set_address(HAL_NRF_PIPE0, rx_address);
 	//setting payload width
 	hal_nrf_set_rx_payload_width(HAL_NRF_PIPE0, DATA_PAIR_LENGTH);
+}
+
+void set_ping_mode(void) {
+	//setting payload width
+	hal_nrf_set_rx_payload_width(HAL_NRF_PIPE0, DATA_LENGTH);
 }
 
 void send_payload(uint8_t *payload, uint8_t pwr){
@@ -244,18 +295,19 @@ void make_payload(uint8_t *payload, uint8_t cmd){
 	memcpy(payload, &commands[cmd], 8);
 }
 
-void make_command(KLESS_CMD *cmd, hal_nrf_output_power_t *pwr){
-	*cmd = KLESS_CMD_PING;
-	*pwr = HAL_NRF_18DBM;
+bool make_command(KLESS_CMD *cmd, hal_nrf_output_power_t *pwr){	
+	bool pressed = false;
 	
 	// Check buttons
 	if(BTN_ALARM || BTN_SEAT){
 		// handle bounce effect
+		pressed = true;
 		delay_ms(10);
 		
 		// handle each buttons
 		if(BTN_SEAT)	{
 			*cmd = KLESS_CMD_SEAT;
+			*pwr = HAL_NRF_18DBM;
 		} else if(BTN_ALARM)	{
 			*cmd = KLESS_CMD_ALARM;
 			*pwr = HAL_NRF_0DBM;
@@ -264,6 +316,8 @@ void make_command(KLESS_CMD *cmd, hal_nrf_output_power_t *pwr){
 		// Wait until button released
 		// wait_button_released();
 	}
+	
+	return pressed;
 }
 
 void make_random_number(uint8_t *p){
