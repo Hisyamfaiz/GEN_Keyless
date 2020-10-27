@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   MAIN                                                              08/20/2020 11:45:45 PAGE 1   
+C51 COMPILER V9.60.0.0   MAIN                                                              10/26/2020 14:24:03 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE MAIN
@@ -55,14 +55,14 @@ line level    source
   44          static uint8_t xdata payload_enc[DATA_LENGTH];
   45          static uint32_t idata AES_Key[4];
   46          static const uint8_t idata commands[3][8] = {
-  47            { 0x5e, 0x6c, 0xa7, 0x74, 0xfd, 0xe3, 0xdf, 0xbc },
+  47            { 0x5e, 0x6c, 0xa7, 0x74, 0xfd, 0xe3, 0xdf, 0xbc  },
   48            { 0xf7, 0xda, 0x4a, 0x4f, 0x65, 0x2d, 0x6e, 0xf0 },
   49            { 0xff, 0xa6, 0xe6, 0x5a, 0x84, 0x82, 0x66, 0x4f }
   50          };
   51          
   52          // ======================================= Function prototype 
   53          void pin_init(void);
-C51 COMPILER V9.60.0.0   MAIN                                                              08/20/2020 11:45:45 PAGE 2   
+C51 COMPILER V9.60.0.0   MAIN                                                              10/26/2020 14:24:03 PAGE 2   
 
   54          void rtc_init(void);
   55          void clock_and_irq_init(void);
@@ -126,7 +126,7 @@ line level    source
  113   3            // Check Payload
  114   3            update_configuration(&pairing_success);
  115   3            // indicator result
-C51 COMPILER V9.60.0.0   MAIN                                                              08/20/2020 11:45:45 PAGE 3   
+C51 COMPILER V9.60.0.0   MAIN                                                              10/26/2020 14:24:03 PAGE 3   
 
  116   3            if(pairing_success){
  117   4              LED_1 = 0;
@@ -190,7 +190,7 @@ line level    source
  174   2          
  175   2          // Update to new configuration
  176   2          hal_aes_setup(0, ECB, (uint8_t*)AES_Key, NULL);
-C51 COMPILER V9.60.0.0   MAIN                                                              08/20/2020 11:45:45 PAGE 4   
+C51 COMPILER V9.60.0.0   MAIN                                                              10/26/2020 14:24:03 PAGE 4   
 
  177   2          //setting Tx address
  178   2          hal_nrf_set_address(HAL_NRF_TX, tx_address);
@@ -254,7 +254,7 @@ line level    source
  236   1        // Start transmission
  237   1        CE_HIGH();
  238   1        radio_busy = true;
-C51 COMPILER V9.60.0.0   MAIN                                                              08/20/2020 11:45:45 PAGE 5   
+C51 COMPILER V9.60.0.0   MAIN                                                              10/26/2020 14:24:03 PAGE 5   
 
  239   1        while (radio_busy){}
  240   1        CE_LOW();
@@ -318,7 +318,7 @@ line level    source
  298   1        P1CON = 0x00 + 0; // Set P1.1 as output again
  299   1        P0CON = 0x10 + 1; // Set P0.1 as input again
  300   1        P0CON = 0x10 + 3; // Set P0.3 as input again
-C51 COMPILER V9.60.0.0   MAIN                                                              08/20/2020 11:45:45 PAGE 6   
+C51 COMPILER V9.60.0.0   MAIN                                                              10/26/2020 14:24:03 PAGE 6   
 
  301   1          
  302   1        P0 = 0x00;
@@ -382,7 +382,7 @@ line level    source
  360   1        // Wait until 16 MHz crystal oscillator is running
  361   1        #ifdef MCU_NRF24LE1
  362   1        while(hal_clk_get_16m_source() != HAL_CLK_XOSC16M){}
-C51 COMPILER V9.60.0.0   MAIN                                                              08/20/2020 11:45:45 PAGE 7   
+C51 COMPILER V9.60.0.0   MAIN                                                              10/26/2020 14:24:03 PAGE 7   
 
  363   1        #endif
  364   1        // Enable the radio clock
@@ -446,7 +446,7 @@ line level    source
  422   2            while(!hal_nrf_rx_fifo_empty()){
  423   3              hal_nrf_read_rx_payload(payload);
  424   3            }
-C51 COMPILER V9.60.0.0   MAIN                                                              08/20/2020 11:45:45 PAGE 8   
+C51 COMPILER V9.60.0.0   MAIN                                                              10/26/2020 14:24:03 PAGE 8   
 
  425   2            received = true;
  426   2            break;
