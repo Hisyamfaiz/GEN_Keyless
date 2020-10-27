@@ -59,18 +59,18 @@ void sleep_mode(void);
 void make_random_number(uint8_t *p);
 void make_command(KLESS_CMD *cmd, hal_nrf_output_power_t *pwr);
 void make_payload(uint8_t *payload, uint8_t cmd);
-void send_payload(uint8_t *payload, uint8_t pwr);
+void send_payload(uint8_t *payload, uint8_t pwr, uint8_t retry);
 void set_pairing_mode(void);
 void receive_pairing(void);
 void update_configuration(uint8_t *success);
 void wait_button_released(void);
-bool receive_ping(void);
-void set_ping_mode(void);
+bool receive_ping(uint8_t timeout);
+void set_normal_mode(void);
+void load_flash(void);
 
 // ======================================= Main function 
 void main(void){
 	// local variable
-	uint8_t vcu_id[4];
 	uint8_t pairing_success;
 	KLESS_CMD command;
 	hal_nrf_output_power_t power;
@@ -83,17 +83,10 @@ void main(void){
 	clock_and_irq_init();
 	
 	// Load Flash
-	hal_flash_bytes_read(VADDR_VCU_ID, vcu_id, sizeof(uint32_t));
-	hal_flash_bytes_read(VADDR_AES_KEY, (uint8_t*)AES_Key, DATA_LENGTH);
-	
-	// Apply address
-	memcpy(tx_address, vcu_id, sizeof(uint32_t));
-	memcpy(rx_address, vcu_id, sizeof(uint32_t));
+	load_flash();
 	
 	// Initialise RF module
 	nrf_init();
-	// Initialise AES
-	hal_aes_setup(0, ECB, (uint8_t*)AES_Key, NULL);
 	// Initialise watchdog
 	hal_wdog_init(0x0300);
 
@@ -120,6 +113,11 @@ void main(void){
 					LED_1 = 1;
 					LED_2 = 1;
 				}
+				
+				set_normal_mode();
+			// Wait until button released
+			wait_button_released();
+				
 			} else {
 				
 				// Button Command Mode				
@@ -131,18 +129,13 @@ void main(void){
 				// Encrypt payload
 				hal_aes_crypt(payload_enc, payload);
 				// Send the payload
-				send_payload(payload_enc, power);		
+				send_payload(payload_enc, power, 1);		
 				// indicator
 				LED_2 = !LED_2;
 			}
-			
-			// Wait until button released
-			wait_button_released();
-			
 		} else {
 			// Normal Mode
-			set_ping_mode();
-			if (receive_ping()){
+			if (receive_ping(5)){
 				// Generate Command				
 				command = KLESS_CMD_PING;
 				power = HAL_NRF_18DBM;
@@ -151,7 +144,7 @@ void main(void){
 				// Encrypt payload
 				hal_aes_crypt(payload_enc, payload);
 				// Send the payload
-				send_payload(payload_enc, power);
+				send_payload(payload_enc, power, 1);
 				
 				// indicator
 				LED_1 = !LED_1;
@@ -172,24 +165,33 @@ void wait_button_released(void){
 			hal_wdog_restart();
 			delay_ms(50);
 		}
-		delay_ms(100);	
+		//delay_ms(100);	
+}
+
+void load_flash(void){
+	uint8_t vcu_id[4];
+	
+	hal_flash_bytes_read(VADDR_VCU_ID, vcu_id, sizeof(uint32_t));
+	hal_flash_bytes_read(VADDR_AES_KEY, (uint8_t*)AES_Key, DATA_LENGTH);
+	
+	// Apply address
+	memcpy(tx_address, vcu_id, sizeof(uint32_t));
+	memcpy(rx_address, vcu_id, sizeof(uint32_t));
+	// Initialise AES
+	hal_aes_setup(0, ECB, (uint8_t*)AES_Key, NULL);
 }
 
 void update_configuration(uint8_t *success){
 	if(received && (payload[DATA_PAIR_LENGTH - 1] == 0xAB)) {
-		// Apply new aes key
-		memcpy(AES_Key, payload, DATA_LENGTH);
-		// Apply new address
-		memcpy(tx_address, &payload[DATA_LENGTH], sizeof(uint32_t));
-		memcpy(rx_address, &payload[DATA_LENGTH], sizeof(uint32_t));
 		
 		// Save to flash
 		hal_flash_page_erase(HAL_DATA_NV_FLASH_PN1);
 		hal_flash_bytes_write(VADDR_VCU_ID, &payload[DATA_LENGTH], sizeof(uint32_t));
 		hal_flash_bytes_write(VADDR_AES_KEY, payload, DATA_LENGTH);
 		
-		// Update to new configuration
-		hal_aes_setup(0, ECB, (uint8_t*)AES_Key, NULL);
+		// Apply new aes key
+		load_flash();
+		
 		//setting Tx address
 		hal_nrf_set_address(HAL_NRF_TX, tx_address);
 		//setting Rx address for pipe0
@@ -224,7 +226,7 @@ void receive_pairing(void){
 	hal_nrf_set_rx_payload_width(HAL_NRF_PIPE0, DATA_LENGTH);	
 }
 
-bool receive_ping(void){
+bool receive_ping(uint8_t timeout){
 	uint32_t ms = 0;
 	// Power up radio
 	hal_nrf_set_power_mode(HAL_NRF_PWR_UP);
@@ -234,7 +236,7 @@ bool receive_ping(void){
 	// Enable receiver
 	CE_HIGH();
 	received = false;
-	while (!received && ms < 50){
+	while (!received && ms < timeout){
 		// Indicator
 //		LED_1 = !LED_1;
 //		LED_2 = !LED_1;
@@ -265,12 +267,12 @@ void set_pairing_mode(void) {
 	hal_nrf_set_rx_payload_width(HAL_NRF_PIPE0, DATA_PAIR_LENGTH);
 }
 
-void set_ping_mode(void) {
+void set_normal_mode(void) {
 	//setting payload width
 	hal_nrf_set_rx_payload_width(HAL_NRF_PIPE0, DATA_LENGTH);
 }
 
-void send_payload(uint8_t *payload, uint8_t pwr){
+void send_payload(uint8_t *payload, uint8_t pwr, uint8_t retry){
 	// Write payload to radio TX FIFO
 	hal_nrf_write_tx_payload(payload, DATA_LENGTH);
 	// Setting power output
@@ -282,11 +284,12 @@ void send_payload(uint8_t *payload, uint8_t pwr){
 	// Configure radio as primary receiver (PTX)
 	hal_nrf_set_operation_mode(HAL_NRF_PTX);
 	
-	// Start transmission
-	CE_HIGH();
-	radio_busy = true;
-	while (radio_busy){}
-	CE_LOW();
+	while(retry--){// Start transmission
+		CE_HIGH();
+		radio_busy = true;
+		while (radio_busy){}
+		CE_LOW();
+	}
 		
 	// Power off radio	
 	hal_nrf_set_power_mode(HAL_NRF_PWR_DOWN);
