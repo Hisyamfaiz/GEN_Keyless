@@ -148,7 +148,7 @@ void main(void){
 				send_payload(payload_enc, power, 1);
 				
 				// indicator
-				//LED_1 = !LED_1;
+				LED_1 = !LED_1;
 			}
 		}
 
