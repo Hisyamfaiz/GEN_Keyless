@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   MAIN                                                              10/28/2020 11:17:13 PAGE 1   
+C51 COMPILER V9.60.0.0   MAIN                                                              10/28/2020 13:15:10 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE MAIN
@@ -62,7 +62,7 @@ line level    source
   51          };
   52          
   53          // ======================================= Function prototype 
-C51 COMPILER V9.60.0.0   MAIN                                                              10/28/2020 11:17:13 PAGE 2   
+C51 COMPILER V9.60.0.0   MAIN                                                              10/28/2020 13:15:10 PAGE 2   
 
   54          void pin_init(void);
   55          void rtc_init(void);
@@ -126,7 +126,7 @@ line level    source
  113   5                LED_1 = 1;
  114   5                LED_2 = 1;
  115   5              }
-C51 COMPILER V9.60.0.0   MAIN                                                              10/28/2020 11:17:13 PAGE 3   
+C51 COMPILER V9.60.0.0   MAIN                                                              10/28/2020 13:15:10 PAGE 3   
 
  116   4              
  117   4              set_normal_mode();
@@ -190,7 +190,7 @@ line level    source
  175   1        hal_flash_bytes_read(VADDR_VCU_ID, vcu_id, sizeof(uint32_t));
  176   1        hal_flash_bytes_read(VADDR_AES_KEY, (uint8_t*)AES_Key, DATA_LENGTH);
  177   1        
-C51 COMPILER V9.60.0.0   MAIN                                                              10/28/2020 11:17:13 PAGE 4   
+C51 COMPILER V9.60.0.0   MAIN                                                              10/28/2020 13:15:10 PAGE 4   
 
  178   1        // Apply address
  179   1        memcpy(tx_address, vcu_id, sizeof(uint32_t));
@@ -254,7 +254,7 @@ line level    source
  237   1        // Enable receiver
  238   1        CE_HIGH();
  239   1        received = false;
-C51 COMPILER V9.60.0.0   MAIN                                                              10/28/2020 11:17:13 PAGE 5   
+C51 COMPILER V9.60.0.0   MAIN                                                              10/28/2020 13:15:10 PAGE 5   
 
  240   1        while (!received && ms < timeout){
  241   2          // Indicator
@@ -318,7 +318,7 @@ line level    source
  299   1      }
  300          
  301          void make_payload(uint8_t *payload, uint8_t cmd){ 
-C51 COMPILER V9.60.0.0   MAIN                                                              10/28/2020 11:17:13 PAGE 6   
+C51 COMPILER V9.60.0.0   MAIN                                                              10/28/2020 13:15:10 PAGE 6   
 
  302   1        memcpy(payload, &commands[cmd], 8);
  303   1      }
@@ -382,7 +382,7 @@ line level    source
  361   1        hal_nrf_set_address_width(HAL_NRF_AW_5BYTES);
  362   1        //setting auto retransmitt
  363   1        hal_nrf_set_auto_retr(0x0F,0x0F);
-C51 COMPILER V9.60.0.0   MAIN                                                              10/28/2020 11:17:13 PAGE 7   
+C51 COMPILER V9.60.0.0   MAIN                                                              10/28/2020 13:15:10 PAGE 7   
 
  364   1        //settinf RF channel
  365   1        hal_nrf_set_rf_channel(110);
@@ -446,7 +446,7 @@ line level    source
  423          
  424          // ======================================= Interrupt Service Routine
  425          // RTC wakeup by tick
-C51 COMPILER V9.60.0.0   MAIN                                                              10/28/2020 11:17:13 PAGE 8   
+C51 COMPILER V9.60.0.0   MAIN                                                              10/28/2020 13:15:10 PAGE 8   
 
  426          void wakeup_tick() interrupt INTERRUPT_TICK {
  427   1        // LED_2 = !LED_2; 
@@ -511,7 +511,7 @@ MODULE INFORMATION:   STATIC OVERLAYABLE
    BIT SIZE         =   ----    ----
 END OF MODULE INFORMATION.
 
-C51 COMPILER V9.60.0.0   MAIN                                                              10/28/2020 11:17:13 PAGE 9   
+C51 COMPILER V9.60.0.0   MAIN                                                              10/28/2020 13:15:10 PAGE 9   
 
 
 C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
