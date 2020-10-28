@@ -66,6 +66,7 @@ void update_configuration(uint8_t *success);
 void wait_button_released(void);
 bool receive_ping(uint8_t timeout);
 void set_normal_mode(void);
+void save_flash(void);
 void load_flash(void);
 
 // ======================================= Main function 
@@ -119,12 +120,12 @@ void main(void){
 			// Wait until button released
 			wait_button_released();
 				
-			} else {
-				
+			} else if(BTN_ALARM){
 				// Button Command Mode				
-				make_command(&command, &power);
+				command = KLESS_CMD_ALARM;
+				power = HAL_NRF_0DBM;
 				// Generate Random Number
-				make_random_number(&payload[DATA_LENGTH/2]);
+				//make_random_number(&payload[DATA_LENGTH/2]);
 				// Insert command to payload
 				make_payload(payload, command);
 				// Encrypt payload
@@ -134,12 +135,13 @@ void main(void){
 				// indicator
 				LED_2 = !LED_2;
 			}
-		} else {
+		} 
+		
 			// Normal Mode
-			if (receive_ping(5)){
+			if (receive_ping(10) && !BTN_ALARM){
 				// Generate Command				
-				command = KLESS_CMD_PING;
-				power = HAL_NRF_18DBM;
+				make_command(&command, &power);
+				
 				// Insert command to payload
 				make_payload(payload, command);
 				// Encrypt payload
@@ -150,7 +152,6 @@ void main(void){
 				// indicator
 				LED_1 = !LED_1;
 			}
-		}
 
 		// reset wdog
 		hal_wdog_restart();	
@@ -184,11 +185,8 @@ void load_flash(void){
 
 void update_configuration(uint8_t *success){
 	if(received && (payload[DATA_PAIR_LENGTH - 1] == 0xAB)) {
-		
-		// Save to flash
-		hal_flash_page_erase(HAL_DATA_NV_FLASH_PN1);
-		hal_flash_bytes_write(VADDR_VCU_ID, &payload[DATA_LENGTH], sizeof(uint32_t));
-		hal_flash_bytes_write(VADDR_AES_KEY, payload, DATA_LENGTH);
+		//safe to flash
+		save_flash();
 		
 		// Apply new aes key
 		load_flash();
@@ -200,6 +198,13 @@ void update_configuration(uint8_t *success){
 		
 		*success = 1;
 	}	
+}
+
+void save_flash(void){
+	// Save to flash
+	hal_flash_page_erase(HAL_DATA_NV_FLASH_PN0);
+	hal_flash_bytes_write(VADDR_VCU_ID, &payload[DATA_LENGTH], sizeof(uint32_t));
+	hal_flash_bytes_write(VADDR_AES_KEY, payload, DATA_LENGTH);
 }
 
 void receive_pairing(void){
@@ -300,16 +305,16 @@ void send_payload(uint8_t *payload, uint8_t pwr, uint8_t retry){
 
 void make_payload(uint8_t *payload, uint8_t cmd){	
 	memcpy(payload, &commands[cmd], 8);
+	//memcpy(payload+8, &commands[cmd], 8);
 }
 
 void make_command(KLESS_CMD *cmd, hal_nrf_output_power_t *pwr){		
 	// handle each buttons
+	*pwr = HAL_NRF_18DBM;
 	if(BTN_SEAT)	{
 		*cmd = KLESS_CMD_SEAT;
-		*pwr = HAL_NRF_18DBM;
-	} else if(BTN_ALARM)	{
-		*cmd = KLESS_CMD_ALARM;
-		*pwr = HAL_NRF_0DBM;
+	} else 	{
+		*cmd = KLESS_CMD_PING;
 	}		
 }
 
@@ -387,7 +392,7 @@ void rtc_init(void){
 	hal_rtc_start(false);
 	hal_clklf_set_source(HAL_CLKLF_RCOSC32K);
 	hal_rtc_set_compare_mode(HAL_RTC_COMPARE_MODE_0);
-	hal_rtc_set_compare_value(0xFFFF);
+	hal_rtc_set_compare_value(0xFFFF/2);
 	hal_rtc_start(true);
 
 	// Wait for the 32kHz to startup (change phase)
@@ -424,7 +429,7 @@ void sleep_mode(void){
 // ======================================= Interrupt Service Routine
 // RTC wakeup by tick
 void wakeup_tick() interrupt INTERRUPT_TICK {
-	// LED_2 = !LED_2; 
+	 //LED_2 = !LED_2; 
 }
 
 // RTC wakeup by button
