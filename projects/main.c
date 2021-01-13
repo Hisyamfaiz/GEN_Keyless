@@ -341,13 +341,14 @@ void pin_init(void){
 	P0DIR = 0x0B; 
 	P1DIR = 0x00;
 
-	P1CON = 0x00 + 3; // Set P1.3 as output again
+	P1CON = 0x00 + 3; // Set P1.3 as outputb  again
 	P1CON = 0x00 + 0; // Set P1.1 as output again
 	P0CON = 0x10 + 1; // Set P0.1 as input again
 	P0CON = 0x10 + 3; // Set P0.3 as input again
 		
 	P0 = 0x00;
 	P1 = 0x00;
+	
 	WUOPC0 = 0x0B;	//set pin P0.3 & P0.1 as wake-up pin
 	OPMCON = 0x00;	//latch open and wake-up pin active high
 	
@@ -359,7 +360,7 @@ void pin_init(void){
 
 void nrf_init(void){
 	// Setting datarate
-	hal_nrf_set_datarate(HAL_NRF_250KBPS);
+	hal_nrf_set_datarate(HAL_NRF_1MBPS);
 	//setting crc
 	hal_nrf_set_crc_mode(HAL_NRF_CRC_8BIT);
 	//setting address

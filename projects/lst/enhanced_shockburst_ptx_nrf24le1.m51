@@ -1,4 +1,4 @@
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                    10/28/2020  16:06:38  PAGE 1
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                    01/13/2021  10:50:30  PAGE 1
 
 
 BL51 BANKED LINKER/LOCATER V6.22.2.0, INVOKED BY:
@@ -59,7 +59,7 @@ LINK MAP OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
             DATA    005EH     0001H     UNIT         ?DT?_HAL_NRF_SETUP_DYNAMIC_PAYLOAD?HAL_NRF
             DATA    005FH     0001H     UNIT         ?DT?_HAL_NRF_WRITE_REG?HAL_NRF
             IDATA   0060H     0028H     UNIT         ?ID?MAIN
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 2
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 2
 
 
             IDATA   0088H     0001H     UNIT         ?STACK
@@ -119,7 +119,7 @@ LINK MAP OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
             CODE    11D6H     0028H     UNIT         ?PR?_HAL_NRF_SET_PLL_MODE?HAL_NRF
             CODE    11FEH     0027H     UNIT         ?PR?_HAL_NRF_ENABLE_ACK_PAYLOAD?HAL_NRF
             CODE    1225H     0025H     UNIT         ?PR?_MAKE_PAYLOAD?MAIN
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 3
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 3
 
 
             CODE    124AH     0025H     UNIT         ?PR?_HAL_NRF_ENABLE_DYNAMIC_ACK?HAL_NRF
@@ -179,7 +179,7 @@ LINK MAP OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
             CODE    1608H     0008H     UNIT         ?PR?HAL_NRF_GET_IRQ_FLAGS?HAL_NRF
             CODE    1610H     0007H     UNIT         ?PR?SET_NORMAL_MODE?MAIN
             CODE    1617H     0007H     UNIT         ?PR?_HAL_NRF_SET_RX_PAYLOAD_WIDTH?HAL_NRF
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 4
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 4
 
 
             CODE    161EH     0007H     UNIT         ?PR?_HAL_NRF_WRITE_TX_PAYLOAD?HAL_NRF
@@ -239,7 +239,7 @@ SEGMENT                                            DATA_GROUP
   +--> ?PR?_HAL_NRF_RW?HAL_NRF_HW
 
 ?PR?HAL_NRF_READ_RX_PAYLOAD_WIDTH?HAL...         -----    -----
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 5
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 5
 
 
   +--> ?PR?_HAL_NRF_READ_REG?HAL_NRF
@@ -299,7 +299,7 @@ SEGMENT                                            DATA_GROUP
   +--> ?PR?_HAL_NRF_SET_RF_CHANNEL?HAL_NRF
   +--> ?PR?_HAL_NRF_SET_ADDRESS?HAL_NRF
   +--> ?PR?_HAL_NRF_SET_RX_PAYLOAD_WIDTH?HAL...
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 6
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 6
 
 
   +--> ?PR?_HAL_NRF_OPEN_PIPE?HAL_NRF
@@ -359,7 +359,7 @@ SEGMENT                                            DATA_GROUP
 ?PR?RECEIVE_PAIRING?MAIN                         -----    -----
   +--> ?PR?_HAL_NRF_SET_POWER_MODE?HAL_NRF
   +--> ?PR?_HAL_NRF_SET_OPERATION_MODE?HAL_NRF
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 7
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 7
 
 
   +--> ?PR?HAL_WDOG_RESTART?HAL_WDOG
@@ -419,7 +419,7 @@ SEGMENT                                            DATA_GROUP
   +--> ?PR?_HAL_NRF_READ_REG?HAL_NRF
   +--> ?PR?_HAL_NRF_WRITE_REG?HAL_NRF
 
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 8
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 8
 
 
 ?PR?_RECEIVE_PING?MAIN                           0017H    0005H
@@ -479,7 +479,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   C:10D5H         PUBLIC        rtc_init
   D:009EH         PUBLIC        P0CON
   D:0094H         PUBLIC        P1DIR
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 9
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 9
 
 
   D:009FH         PUBLIC        P1CON
@@ -539,7 +539,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   C:08F5H         LINE#         132
   C:0907H         LINE#         134
   C:090AH         LINE#         136
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 10
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 10
 
 
   C:090CH         LINE#         137
@@ -599,7 +599,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   C:0F9FH         LINE#         217
   C:0FA1H         LINE#         218
   C:0FA4H         LINE#         219
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 11
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 11
 
 
   C:0FAEH         LINE#         221
@@ -659,7 +659,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   C:0E89H         LINE#         293
   C:0E90H         LINE#         294
   C:0E92H         LINE#         295
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 12
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 12
 
 
   C:0E95H         LINE#         296
@@ -719,99 +719,99 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   C:0ECDH         LINE#         346
   C:0ED0H         LINE#         347
   C:0ED3H         LINE#         349
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 13
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 13
 
 
   C:0ED5H         LINE#         350
-  C:0ED7H         LINE#         351
-  C:0EDAH         LINE#         352
-  C:0EDCH         LINE#         355
-  C:0EDEH         LINE#         356
-  C:0EE0H         LINE#         357
-  C:0EE2H         LINE#         358
+  C:0ED7H         LINE#         352
+  C:0EDAH         LINE#         353
+  C:0EDCH         LINE#         356
+  C:0EDEH         LINE#         357
+  C:0EE0H         LINE#         358
+  C:0EE2H         LINE#         359
   -------         ENDPROC       PIN_INIT
   -------         PROC          NRF_INIT
-  C:0C24H         LINE#         360
-  C:0C24H         LINE#         362
-  C:0C29H         LINE#         364
-  C:0C2EH         LINE#         366
-  C:0C33H         LINE#         368
-  C:0C3CH         LINE#         370
-  C:0C41H         LINE#         372
-  C:0C4CH         LINE#         374
-  C:0C53H         LINE#         376
-  C:0C5AH         LINE#         378
-  C:0C65H         LINE#         380
-  C:0C6CH         LINE#         381
-  C:0C73H         LINE#         382
-  C:0C7AH         LINE#         384
-  C:0C7FH         LINE#         386
-  C:0C84H         LINE#         387
-  C:0C89H         LINE#         388
+  C:0C24H         LINE#         361
+  C:0C24H         LINE#         363
+  C:0C29H         LINE#         365
+  C:0C2EH         LINE#         367
+  C:0C33H         LINE#         369
+  C:0C3CH         LINE#         371
+  C:0C41H         LINE#         373
+  C:0C4CH         LINE#         375
+  C:0C53H         LINE#         377
+  C:0C5AH         LINE#         379
+  C:0C65H         LINE#         381
+  C:0C6CH         LINE#         382
+  C:0C73H         LINE#         383
+  C:0C7AH         LINE#         385
+  C:0C7FH         LINE#         387
+  C:0C84H         LINE#         388
+  C:0C89H         LINE#         389
   -------         ENDPROC       NRF_INIT
   -------         PROC          RTC_INIT
-  C:10D5H         LINE#         391
   C:10D5H         LINE#         392
-  C:10DAH         LINE#         393
-  C:10DEH         LINE#         394
-  C:10E3H         LINE#         395
-  C:10EAH         LINE#         396
-  C:10EFH         LINE#         399
-  C:10F7H         LINE#         400
-  C:10FFH         LINE#         403
-  C:1102H         LINE#         404
+  C:10D5H         LINE#         393
+  C:10DAH         LINE#         394
+  C:10DEH         LINE#         395
+  C:10E3H         LINE#         396
+  C:10EAH         LINE#         397
+  C:10EFH         LINE#         400
+  C:10F7H         LINE#         401
+  C:10FFH         LINE#         404
+  C:1102H         LINE#         405
   -------         ENDPROC       RTC_INIT
   -------         PROC          CLOCK_AND_IRQ_INIT
-  C:14DBH         LINE#         406
-  C:14DBH         LINE#         409
-  C:14E3H         LINE#         412
-  C:14E5H         LINE#         414
-  C:14E7H         LINE#         416
-  C:14E9H         LINE#         417
+  C:14DBH         LINE#         407
+  C:14DBH         LINE#         410
+  C:14E3H         LINE#         413
+  C:14E5H         LINE#         415
+  C:14E7H         LINE#         417
+  C:14E9H         LINE#         418
   -------         ENDPROC       CLOCK_AND_IRQ_INIT
   -------         PROC          SLEEP_MODE
-  C:1587H         LINE#         419
-  C:1587H         LINE#         421
-  C:158AH         LINE#         423
-  C:158DH         LINE#         425
-  C:1590H         LINE#         427
+  C:1587H         LINE#         420
+  C:1587H         LINE#         422
+  C:158AH         LINE#         424
+  C:158DH         LINE#         426
+  C:1590H         LINE#         428
   -------         ENDPROC       SLEEP_MODE
   -------         PROC          WAKEUP_TICK
-  C:005AH         LINE#         431
-  C:005AH         LINE#         433
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 14
+  C:005AH         LINE#         432
+  C:005AH         LINE#         434
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 14
 
 
   -------         ENDPROC       WAKEUP_TICK
   -------         PROC          WAKEUP_IRQ
-  C:006AH         LINE#         436
-  C:006AH         LINE#         438
+  C:006AH         LINE#         437
+  C:006AH         LINE#         439
   -------         ENDPROC       WAKEUP_IRQ
   -------         PROC          NRF_ISR
   -------         DO            
   D:0007H         SYMBOL        irq_flags
   -------         ENDDO         
-  C:0BAFH         LINE#         442
-  C:0BD5H         LINE#         446
-  C:0BD8H         LINE#         448
-  C:0BE5H         LINE#         449
-  C:0BE5H         LINE#         451
+  C:0BAFH         LINE#         443
+  C:0BD5H         LINE#         447
+  C:0BD8H         LINE#         449
+  C:0BE5H         LINE#         450
   C:0BE5H         LINE#         452
-  C:0BE5H         LINE#         454
-  C:0BE7H         LINE#         457
-  C:0BE7H         LINE#         462
-  C:0BEAH         LINE#         463
-  C:0BEDH         LINE#         464
-  C:0BEFH         LINE#         467
-  C:0BEFH         LINE#         469
-  C:0BF5H         LINE#         470
-  C:0BFEH         LINE#         471
-  C:0C00H         LINE#         472
-  C:0C03H         LINE#         473
-  C:0C03H         LINE#         475
+  C:0BE5H         LINE#         453
+  C:0BE5H         LINE#         455
+  C:0BE7H         LINE#         458
+  C:0BE7H         LINE#         463
+  C:0BEAH         LINE#         464
+  C:0BEDH         LINE#         465
+  C:0BEFH         LINE#         468
+  C:0BEFH         LINE#         470
+  C:0BF5H         LINE#         471
+  C:0BFEH         LINE#         472
+  C:0C00H         LINE#         473
+  C:0C03H         LINE#         474
   C:0C03H         LINE#         476
   C:0C03H         LINE#         477
-  C:0C03H         LINE#         479
+  C:0C03H         LINE#         478
+  C:0C03H         LINE#         480
   -------         ENDPROC       NRF_ISR
   -------         ENDMOD        MAIN
 
@@ -839,7 +839,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   C:1591H         LINE#         25
   C:1591H         LINE#         26
   C:1591H         LINE#         27
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 15
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 15
 
 
   C:1593H         LINE#         28
@@ -899,7 +899,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   C:1071H         PUBLIC        _hal_nrf_get_address
   C:12D7H         PUBLIC        _hal_nrf_set_operation_mode
   C:15CDH         PUBLIC        _hal_nrf_write_ack_payload
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 16
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 16
 
 
   C:159BH         PUBLIC        hal_nrf_get_address_width
@@ -959,7 +959,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   C:1309H         LINE#         217
   C:130CH         LINE#         218
   C:130CH         LINE#         220
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 17
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 17
 
 
   -------         ENDPROC       _HAL_NRF_SET_POWER_MODE
@@ -1019,7 +1019,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   C:004EH         LINE#         269
   C:004EH         LINE#         270
   C:004EH         LINE#         273
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 18
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 18
 
 
   C:0055H         LINE#         275
@@ -1079,7 +1079,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   C:0DF1H         LINE#         327
   C:0DF1H         LINE#         328
   C:0DF4H         LINE#         330
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 19
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 19
 
 
   C:0DF8H         LINE#         331
@@ -1139,7 +1139,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   C:0EFAH         LINE#         387
   C:0EFAH         LINE#         388
   C:0EFAH         LINE#         389
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 20
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 20
 
 
   C:0F0DH         LINE#         390
@@ -1199,7 +1199,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   C:159BH         LINE#         436
   C:159BH         LINE#         437
   C:159BH         LINE#         438
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 21
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 21
 
 
   C:15A4H         LINE#         439
@@ -1259,7 +1259,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   -------         ENDPROC       _HAL_NRF_GET_PIPE_STATUS
   -------         PROC          HAL_NRF_GET_AUTO_RETR_STATUS
   C:0046H         LINE#         490
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 22
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 22
 
 
   C:0046H         LINE#         491
@@ -1319,7 +1319,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   -------         PROC          _HAL_NRF_SET_OUTPUT_POWER
   D:001CH         SYMBOL        power
   -------         DO            
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 23
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 23
 
 
   D:001DH         SYMBOL        rf_setup
@@ -1379,7 +1379,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   C:1515H         LINE#         591
   C:1515H         LINE#         592
   C:1520H         LINE#         593
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 24
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 24
 
 
   -------         ENDPROC       HAL_NRF_TX_FIFO_FULL
@@ -1439,7 +1439,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   -------         ENDPROC       _HAL_NRF_ENABLE_DYNAMIC_PAYLOAD
   -------         PROC          _HAL_NRF_ENABLE_ACK_PAYLOAD
   D:0017H         SYMBOL        enable
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 25
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 25
 
 
   -------         DO            
@@ -1499,7 +1499,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   C:14F9H         LINE#         683
   C:14F9H         LINE#         684
   C:14F9H         LINE#         685
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 26
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 26
 
 
   C:1506H         LINE#         686
@@ -1559,7 +1559,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   -------         ENDPROC       _HAL_NRF_SET_PLL_MODE
   -------         PROC          _HAL_NRF_ENABLE_CONTINIOUS_WAVE
   D:005AH         SYMBOL        enable
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 27
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 27
 
 
   -------         DO            
@@ -1619,7 +1619,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   D:000FH         SYMBOL        read_byte
   D:0010H         SYMBOL        first_round
   -------         DO            
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 28
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 28
 
 
   D:0011H         SYMBOL        buf
@@ -1679,7 +1679,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   C:0455H         LINE#         854
   C:0455H         LINE#         855
   C:0458H         LINE#         856
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 29
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 29
 
 
   C:047CH         LINE#         857
@@ -1739,7 +1739,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   C:09A7H         LINE#         905
   C:09BBH         LINE#         906
   C:09BDH         LINE#         908
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 30
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 30
 
 
   C:09BDH         LINE#         909
@@ -1799,7 +1799,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   C:14CAH         LINE#         37
   -------         ENDPROC       _HAL_CLK_SET_INPUT
   -------         PROC          _HAL_CLK_SET_16M_SOURCE
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 31
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 31
 
 
   D:0007H         SYMBOL        source
@@ -1859,7 +1859,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   -------         PROC          L?0011
   -------         ENDPROC       L?0011
   -------         PROC          _DELAY_US
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 32
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 32
 
 
   D:0006H         SYMBOL        us
@@ -1919,7 +1919,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   D:00D0H         PUBLIC        PSW
   D:00C0H         PUBLIC        IRCON
   -------         PROC          _HAL_AES_SETUP
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 33
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 33
 
 
   D:001EH         SYMBOL        decrypt
@@ -1979,7 +1979,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   C:06F4H         LINE#         125
   C:06F4H         LINE#         126
   C:0701H         LINE#         127
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 34
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 34
 
 
   C:070FH         LINE#         128
@@ -2039,7 +2039,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   C:0555H         LINE#         182
   C:0562H         LINE#         183
   C:056FH         LINE#         184
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 35
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 35
 
 
   C:0581H         LINE#         185
@@ -2099,7 +2099,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   C:0303H         LINE#         269
   C:0307H         LINE#         271
   C:0316H         LINE#         272
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 36
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 36
 
 
   C:0318H         LINE#         273
@@ -2159,7 +2159,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   C:1429H         LINE#         28
   C:142BH         LINE#         33
   C:142DH         LINE#         36
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 37
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 37
 
 
   C:1430H         LINE#         39
@@ -2219,7 +2219,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   -------         ENDPROC       _HAL_FLASH_BYTE_READ
   -------         PROC          _HAL_FLASH_BYTES_READ
   D:0006H         SYMBOL        a
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 38
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 38
 
 
   D:0001H         SYMBOL        p
@@ -2279,7 +2279,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   C:1603H         LINE#         45
   C:1605H         LINE#         46
   C:1607H         LINE#         55
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 39
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 39
 
 
   -------         ENDPROC       HAL_WDOG_RESTART
@@ -2339,7 +2339,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   C:1507H         LINE#         39
   C:1507H         LINE#         40
   C:1507H         LINE#         41
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 40
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 40
 
 
   C:1514H         LINE#         42
@@ -2399,7 +2399,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   C:1453H         LINE#         85
   C:1455H         LINE#         86
   C:1457H         LINE#         87
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 41
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 41
 
 
   C:145BH         LINE#         88
@@ -2459,7 +2459,7 @@ SYMBOL TABLE OF MODULE:  .\build\enhanced_shockburst_ptx_nrf24le1 (MAIN)
   C:1582H         LINE#         42
   C:1583H         LINE#         44
   C:1583H         LINE#         45
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 42
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 42
 
 
   C:1586H         LINE#         46
@@ -2519,7 +2519,7 @@ CLOCK_AND_IRQ_INIT . . . . . . . . . . @0xe001
 HAL_CLKLF_PHASE. . . . . . . . . . . . @0xe001
 HAL_CLKLF_READY. . . . . . . . . . . . @0xe001
 HAL_CLK_GET_16M_SOURCE . . . . . . . . @0xa001
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  10/28/2020  16:06:38  PAGE 43
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  01/13/2021  10:50:30  PAGE 43
 
 
 HAL_NRF_ACTIVATE_FEATURES. . . . . . . @0x8000

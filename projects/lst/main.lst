@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   MAIN                                                              10/28/2020 16:06:37 PAGE 1   
+C51 COMPILER V9.60.0.0   MAIN                                                              01/13/2021 10:50:29 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE MAIN
@@ -62,7 +62,7 @@ line level    source
   51          };
   52          
   53          // ======================================= Function prototype 
-C51 COMPILER V9.60.0.0   MAIN                                                              10/28/2020 16:06:37 PAGE 2   
+C51 COMPILER V9.60.0.0   MAIN                                                              01/13/2021 10:50:29 PAGE 2   
 
   54          void pin_init(void);
   55          void rtc_init(void);
@@ -126,7 +126,7 @@ line level    source
  113   5              } else {
  114   5                LED_1 = 1;
  115   5                LED_2 = 1;
-C51 COMPILER V9.60.0.0   MAIN                                                              10/28/2020 16:06:37 PAGE 3   
+C51 COMPILER V9.60.0.0   MAIN                                                              01/13/2021 10:50:29 PAGE 3   
 
  116   5              }
  117   4              
@@ -190,7 +190,7 @@ line level    source
  175   1        
  176   1        hal_flash_bytes_read(VADDR_VCU_ID, vcu_id, sizeof(uint32_t));
  177   1        hal_flash_bytes_read(VADDR_AES_KEY, (uint8_t*)AES_Key, DATA_LENGTH);
-C51 COMPILER V9.60.0.0   MAIN                                                              10/28/2020 16:06:37 PAGE 4   
+C51 COMPILER V9.60.0.0   MAIN                                                              01/13/2021 10:50:29 PAGE 4   
 
  178   1        
  179   1        // Apply address
@@ -254,7 +254,7 @@ line level    source
  237   1        // Power up radio
  238   1        hal_nrf_set_power_mode(HAL_NRF_PWR_UP);
  239   1        // Configure radio as primary receiver 
-C51 COMPILER V9.60.0.0   MAIN                                                              10/28/2020 16:06:37 PAGE 5   
+C51 COMPILER V9.60.0.0   MAIN                                                              01/13/2021 10:50:29 PAGE 5   
 
  240   1        hal_nrf_set_operation_mode(HAL_NRF_PRX); 
  241   1        
@@ -318,7 +318,7 @@ line level    source
  299   1          
  300   1        // Power off radio  
  301   1        hal_nrf_set_power_mode(HAL_NRF_PWR_DOWN);
-C51 COMPILER V9.60.0.0   MAIN                                                              10/28/2020 16:06:37 PAGE 6   
+C51 COMPILER V9.60.0.0   MAIN                                                              01/13/2021 10:50:29 PAGE 6   
 
  302   1        // Set transistor to Open
  303   1        TRANSISTOR = 1; 
@@ -362,156 +362,157 @@ line level    source
  341   1        P0DIR = 0x0B; 
  342   1        P1DIR = 0x00;
  343   1      
- 344   1        P1CON = 0x00 + 3; // Set P1.3 as output again
+ 344   1        P1CON = 0x00 + 3; // Set P1.3 as outputb  again
  345   1        P1CON = 0x00 + 0; // Set P1.1 as output again
  346   1        P0CON = 0x10 + 1; // Set P0.1 as input again
  347   1        P0CON = 0x10 + 3; // Set P0.3 as input again
  348   1          
  349   1        P0 = 0x00;
  350   1        P1 = 0x00;
- 351   1        WUOPC0 = 0x0B;  //set pin P0.3 & P0.1 as wake-up pin
- 352   1        OPMCON = 0x00;  //latch open and wake-up pin active high
- 353   1        
- 354   1        // Set default 
- 355   1        TRANSISTOR = 1;
- 356   1        LED_1 = 0;
- 357   1        LED_2 = 0;
- 358   1      }
- 359          
- 360          void nrf_init(void){
- 361   1        // Setting datarate
- 362   1        hal_nrf_set_datarate(HAL_NRF_250KBPS);
- 363   1        //setting crc
-C51 COMPILER V9.60.0.0   MAIN                                                              10/28/2020 16:06:37 PAGE 7   
+ 351   1        
+ 352   1        WUOPC0 = 0x0B;  //set pin P0.3 & P0.1 as wake-up pin
+ 353   1        OPMCON = 0x00;  //latch open and wake-up pin active high
+ 354   1        
+ 355   1        // Set default 
+ 356   1        TRANSISTOR = 1;
+ 357   1        LED_1 = 0;
+ 358   1        LED_2 = 0;
+ 359   1      }
+ 360          
+ 361          void nrf_init(void){
+ 362   1        // Setting datarate
+ 363   1        hal_nrf_set_datarate(HAL_NRF_1MBPS);
+C51 COMPILER V9.60.0.0   MAIN                                                              01/13/2021 10:50:29 PAGE 7   
 
- 364   1        hal_nrf_set_crc_mode(HAL_NRF_CRC_8BIT);
- 365   1        //setting address
- 366   1        hal_nrf_set_address_width(HAL_NRF_AW_5BYTES);
- 367   1        //setting auto retransmitt
- 368   1        hal_nrf_set_auto_retr(0x0F,0x0F);
- 369   1        //settinf RF channel
- 370   1        hal_nrf_set_rf_channel(110);
- 371   1        //setting Tx address
- 372   1        hal_nrf_set_address(HAL_NRF_TX, tx_address);
- 373   1        //setting payload width
- 374   1        hal_nrf_set_rx_payload_width(HAL_NRF_PIPE0, DATA_LENGTH);
- 375   1        //open pipe
- 376   1        hal_nrf_open_pipe(HAL_NRF_PIPE0, 1);
- 377   1        //setting Rx address for pipe0
- 378   1        hal_nrf_set_address(HAL_NRF_PIPE0, rx_address);
- 379   1        //setting interupt mode
- 380   1        hal_nrf_set_irq_mode(HAL_NRF_MAX_RT,1);
- 381   1        hal_nrf_set_irq_mode(HAL_NRF_TX_DS,1);
- 382   1        hal_nrf_set_irq_mode(HAL_NRF_RX_DR,1);
- 383   1        //disable ack
- 384   1        hal_nrf_enable_ack_payload(1);
- 385   1        //clear interupt flag
- 386   1        hal_nrf_clear_irq_flag(HAL_NRF_MAX_RT);
- 387   1        hal_nrf_clear_irq_flag(HAL_NRF_TX_DS);
- 388   1        hal_nrf_clear_irq_flag(HAL_NRF_RX_DR);
- 389   1      }
- 390          
- 391          void rtc_init(void){
- 392   1        hal_rtc_start(false);
- 393   1        hal_clklf_set_source(HAL_CLKLF_RCOSC32K);
- 394   1        hal_rtc_set_compare_mode(HAL_RTC_COMPARE_MODE_0);
- 395   1        hal_rtc_set_compare_value(0xFFFF/2);
- 396   1        hal_rtc_start(true);
- 397   1      
- 398   1        // Wait for the 32kHz to startup (change phase)
- 399   1        while((CLKLFCTRL&0x80)==0x80);
- 400   1        while((CLKLFCTRL&0x80)!=0x80);
- 401   1        
- 402   1        // Setting wake-up from TICK and IRQ
- 403   1        IEN1 = 0x20|0x08; 
- 404   1      }
- 405          
- 406          void clock_and_irq_init(void){
- 407   1        // Wait until 16 MHz crystal oscillator is running
- 408   1        #ifdef MCU_NRF24LE1
- 409   1        while(hal_clk_get_16m_source() != HAL_CLK_XOSC16M){}
- 410   1        #endif
- 411   1        // Enable the radio clock
- 412   1        RFCKEN = 1U;
- 413   1        // Enable RF irq
- 414   1        RF = 1U;
- 415   1        // Enable global irq
- 416   1        EA = 1U;
- 417   1      }
- 418          
- 419          void sleep_mode(void){
- 420   1        // Register retention mode
- 421   1        PWRDWN = 0x04;
- 422   1        // Standby mode (wait for irq)
- 423   1        PWRDWN = 0x07;
- 424   1        // Clear PWRDWN
- 425   1        PWRDWN = 0x00;
-C51 COMPILER V9.60.0.0   MAIN                                                              10/28/2020 16:06:37 PAGE 8   
+ 364   1        //setting crc
+ 365   1        hal_nrf_set_crc_mode(HAL_NRF_CRC_8BIT);
+ 366   1        //setting address
+ 367   1        hal_nrf_set_address_width(HAL_NRF_AW_5BYTES);
+ 368   1        //setting auto retransmitt
+ 369   1        hal_nrf_set_auto_retr(0x0F,0x0F);
+ 370   1        //settinf RF channel
+ 371   1        hal_nrf_set_rf_channel(110);
+ 372   1        //setting Tx address
+ 373   1        hal_nrf_set_address(HAL_NRF_TX, tx_address);
+ 374   1        //setting payload width
+ 375   1        hal_nrf_set_rx_payload_width(HAL_NRF_PIPE0, DATA_LENGTH);
+ 376   1        //open pipe
+ 377   1        hal_nrf_open_pipe(HAL_NRF_PIPE0, 1);
+ 378   1        //setting Rx address for pipe0
+ 379   1        hal_nrf_set_address(HAL_NRF_PIPE0, rx_address);
+ 380   1        //setting interupt mode
+ 381   1        hal_nrf_set_irq_mode(HAL_NRF_MAX_RT,1);
+ 382   1        hal_nrf_set_irq_mode(HAL_NRF_TX_DS,1);
+ 383   1        hal_nrf_set_irq_mode(HAL_NRF_RX_DR,1);
+ 384   1        //disable ack
+ 385   1        hal_nrf_enable_ack_payload(1);
+ 386   1        //clear interupt flag
+ 387   1        hal_nrf_clear_irq_flag(HAL_NRF_MAX_RT);
+ 388   1        hal_nrf_clear_irq_flag(HAL_NRF_TX_DS);
+ 389   1        hal_nrf_clear_irq_flag(HAL_NRF_RX_DR);
+ 390   1      }
+ 391          
+ 392          void rtc_init(void){
+ 393   1        hal_rtc_start(false);
+ 394   1        hal_clklf_set_source(HAL_CLKLF_RCOSC32K);
+ 395   1        hal_rtc_set_compare_mode(HAL_RTC_COMPARE_MODE_0);
+ 396   1        hal_rtc_set_compare_value(0xFFFF/2);
+ 397   1        hal_rtc_start(true);
+ 398   1      
+ 399   1        // Wait for the 32kHz to startup (change phase)
+ 400   1        while((CLKLFCTRL&0x80)==0x80);
+ 401   1        while((CLKLFCTRL&0x80)!=0x80);
+ 402   1        
+ 403   1        // Setting wake-up from TICK and IRQ
+ 404   1        IEN1 = 0x20|0x08; 
+ 405   1      }
+ 406          
+ 407          void clock_and_irq_init(void){
+ 408   1        // Wait until 16 MHz crystal oscillator is running
+ 409   1        #ifdef MCU_NRF24LE1
+ 410   1        while(hal_clk_get_16m_source() != HAL_CLK_XOSC16M){}
+ 411   1        #endif
+ 412   1        // Enable the radio clock
+ 413   1        RFCKEN = 1U;
+ 414   1        // Enable RF irq
+ 415   1        RF = 1U;
+ 416   1        // Enable global irq
+ 417   1        EA = 1U;
+ 418   1      }
+ 419          
+ 420          void sleep_mode(void){
+ 421   1        // Register retention mode
+ 422   1        PWRDWN = 0x04;
+ 423   1        // Standby mode (wait for irq)
+ 424   1        PWRDWN = 0x07;
+ 425   1        // Clear PWRDWN
+C51 COMPILER V9.60.0.0   MAIN                                                              01/13/2021 10:50:29 PAGE 8   
 
- 426   1        // Exit sleep mode
- 427   1      }
- 428          
- 429          // ======================================= Interrupt Service Routine
- 430          // RTC wakeup by tick
- 431          void wakeup_tick() interrupt INTERRUPT_TICK {
- 432   1         //LED_2 = !LED_2; 
- 433   1      }
- 434          
- 435          // RTC wakeup by button
- 436          void wakeup_irq() interrupt INTERRUPT_WUOPIRQ {
- 437   1        // LED_1 = !LED_1;
- 438   1      }
- 439          
+ 426   1        PWRDWN = 0x00;
+ 427   1        // Exit sleep mode
+ 428   1      }
+ 429          
+ 430          // ======================================= Interrupt Service Routine
+ 431          // RTC wakeup by tick
+ 432          void wakeup_tick() interrupt INTERRUPT_TICK {
+ 433   1         //LED_2 = !LED_2; 
+ 434   1      }
+ 435          
+ 436          // RTC wakeup by button
+ 437          void wakeup_irq() interrupt INTERRUPT_WUOPIRQ {
+ 438   1        // LED_1 = !LED_1;
+ 439   1      }
  440          
- 441          // Radio irq
- 442          NRF_ISR() {
- 443   1        uint8_t irq_flags;
- 444   1      
- 445   1        // Read and clear IRQ flags from radio
- 446   1        irq_flags = hal_nrf_get_clear_irq_flags();
- 447   1       
- 448   1        switch(irq_flags)
- 449   1        {
- 450   2          // Transmission success
- 451   2          case (1 << (uint8_t)HAL_NRF_TX_DS):
- 452   2            radio_busy = false;
- 453   2            // Data has been sent
- 454   2            break;
- 455   2          
- 456   2          // Transmission failed (maximum re-transmits)
- 457   2          case (1 << (uint8_t)HAL_NRF_MAX_RT):
- 458   2            // When a MAX_RT interrupt occurs the TX payload will not be removed from the TX FIFO.
- 459   2            // If the packet is to be discarded this must be done manually by flushing the TX FIFO.
- 460   2            // Alternatively, CE_PULSE() can be called re-starting transmission of the payload.
- 461   2            // (Will only be possible after the radio irq flags are cleared)
- 462   2            hal_nrf_flush_tx();
- 463   2            radio_busy = false;
- 464   2            break;
- 465   2          
- 466   2          // Received success
- 467   2          case (1 << (uint8_t)HAL_NRF_RX_DR):
- 468   2            // Read payload
- 469   2            while(!hal_nrf_rx_fifo_empty()){
- 470   3              hal_nrf_read_rx_payload(payload);
- 471   3            }
- 472   2            received = true;
- 473   2            break;
- 474   2            
- 475   2          default:
- 476   2            break;
- 477   2        }
- 478   1        
- 479   1      }
- 480          /** @} */
- 481          
+ 441          
+ 442          // Radio irq
+ 443          NRF_ISR() {
+ 444   1        uint8_t irq_flags;
+ 445   1      
+ 446   1        // Read and clear IRQ flags from radio
+ 447   1        irq_flags = hal_nrf_get_clear_irq_flags();
+ 448   1       
+ 449   1        switch(irq_flags)
+ 450   1        {
+ 451   2          // Transmission success
+ 452   2          case (1 << (uint8_t)HAL_NRF_TX_DS):
+ 453   2            radio_busy = false;
+ 454   2            // Data has been sent
+ 455   2            break;
+ 456   2          
+ 457   2          // Transmission failed (maximum re-transmits)
+ 458   2          case (1 << (uint8_t)HAL_NRF_MAX_RT):
+ 459   2            // When a MAX_RT interrupt occurs the TX payload will not be removed from the TX FIFO.
+ 460   2            // If the packet is to be discarded this must be done manually by flushing the TX FIFO.
+ 461   2            // Alternatively, CE_PULSE() can be called re-starting transmission of the payload.
+ 462   2            // (Will only be possible after the radio irq flags are cleared)
+ 463   2            hal_nrf_flush_tx();
+ 464   2            radio_busy = false;
+ 465   2            break;
+ 466   2          
+ 467   2          // Received success
+ 468   2          case (1 << (uint8_t)HAL_NRF_RX_DR):
+ 469   2            // Read payload
+ 470   2            while(!hal_nrf_rx_fifo_empty()){
+ 471   3              hal_nrf_read_rx_payload(payload);
+ 472   3            }
+ 473   2            received = true;
+ 474   2            break;
+ 475   2            
+ 476   2          default:
+ 477   2            break;
+ 478   2        }
+ 479   1        
+ 480   1      }
+ 481          /** @} */
+ 482          
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
    CODE SIZE        =   1168    ----
    CONSTANT SIZE    =   ----    ----
-   XDATA SIZE       =     37    ----
-C51 COMPILER V9.60.0.0   MAIN                                                              10/28/2020 16:06:37 PAGE 9   
+C51 COMPILER V9.60.0.0   MAIN                                                              01/13/2021 10:50:29 PAGE 9   
 
+   XDATA SIZE       =     37    ----
    PDATA SIZE       =   ----    ----
    DATA SIZE        =     12      32
    IDATA SIZE       =     40    ----

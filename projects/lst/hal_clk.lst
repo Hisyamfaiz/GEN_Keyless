@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   HAL_CLK                                                           06/05/2020 14:49:11 PAGE 1   
+C51 COMPILER V9.60.0.0   HAL_CLK                                                           01/12/2021 16:07:16 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE HAL_CLK
@@ -62,7 +62,7 @@ line level    source
   51   1        else
   52   1        {
   53   2          clock_source = HAL_CLK_RCOSC16M;
-C51 COMPILER V9.60.0.0   HAL_CLK                                                           06/05/2020 14:49:11 PAGE 2   
+C51 COMPILER V9.60.0.0   HAL_CLK                                                           01/12/2021 16:07:16 PAGE 2   
 
   54   2        }
   55   1      
