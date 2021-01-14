@@ -68,14 +68,12 @@ bool receive_ping(uint8_t timeout);
 void set_normal_mode(void);
 void save_flash(void);
 void load_flash(void);
+void transmit (void);
 
 // ======================================= Main function 
 void main(void){
 	// local variable
-	uint8_t pairing_success;
-	KLESS_CMD command;
-	hal_nrf_output_power_t power;
-	
+	uint8_t pairing_success;	
 	// Initialise GPIO
 	pin_init();
 	// Initialise RTC
@@ -121,34 +119,15 @@ void main(void){
 			wait_button_released();
 				
 			} else if(BTN_ALARM){
-				// Button Command Mode				
-				command = KLESS_CMD_ALARM;
-				power = HAL_NRF_0DBM;
-				// Generate Random Number
-				//make_random_number(&payload[DATA_LENGTH/2]);
-				// Insert command to payload
-				make_payload(payload, command);
-				// Encrypt payload
-				hal_aes_crypt(payload_enc, payload);
-				// Send the payload
-				send_payload(payload_enc, power, 1);		
+				transmit();
 				// indicator
 				LED_2 = !LED_2;
 			}
 		} 
 		
 			// Normal Mode
-			if (receive_ping(10) && !BTN_ALARM){
-				// Generate Command				
-				make_command(&command, &power);
-				
-				// Insert command to payload
-				make_payload(payload, command);
-				// Encrypt payload
-				hal_aes_crypt(payload_enc, payload);
-				// Send the payload
-				send_payload(payload_enc, power, 1);
-				
+			if (receive_ping(20) && !BTN_ALARM){
+				transmit();
 				// indicator
 				LED_1 = !LED_1;
 			}
@@ -162,6 +141,20 @@ void main(void){
 }
 
 // ======================================= Function declaration
+void transmit (void){
+	KLESS_CMD command;
+	hal_nrf_output_power_t power;
+	
+	// Generate Command				
+	make_command(&command, &power);
+	// Insert command to payload
+	make_payload(payload, command);
+	// Encrypt payload
+	hal_aes_crypt(payload_enc, payload);
+	// Send the payload
+	send_payload(payload_enc, power, 1);
+}
+
 void wait_button_released(void){
 		while(BTN_ALARM || BTN_SEAT){
 			hal_wdog_restart();
@@ -313,7 +306,13 @@ void make_command(KLESS_CMD *cmd, hal_nrf_output_power_t *pwr){
 	*pwr = HAL_NRF_18DBM;
 	if(BTN_SEAT)	{
 		*cmd = KLESS_CMD_SEAT;
-	} else 	{
+	} 
+	else if (BTN_ALARM){
+		// Button Command Mode				
+		*cmd = KLESS_CMD_ALARM;
+		*pwr = HAL_NRF_0DBM;
+	}
+	else {
 		*cmd = KLESS_CMD_PING;
 	}		
 }
