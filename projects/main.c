@@ -19,10 +19,10 @@
 
 // ======================================= Type definition
 #define TRANSISTOR						P10
-#define LED_1									P11
-#define LED_2									P13
-#define BTN_ALARM							P03
-#define BTN_SEAT							P01
+#define LED_1									P02
+#define LED_2									P03
+#define BTN_ALARM							!P04
+#define BTN_SEAT							!P06 
 
 #define VADDR_VCU_ID					HAL_DATA_NV_BASE_ADDRESS
 #define VADDR_AES_KEY					(VADDR_VCU_ID + sizeof(uint32_t))
@@ -57,7 +57,6 @@ void clock_and_irq_init(void);
 void nrf_init(void);
 void sleep_mode(void);
 void make_random_number(uint8_t *p);
-void make_command(KLESS_CMD *cmd, hal_nrf_output_power_t *pwr);
 void make_payload(uint8_t *payload, uint8_t cmd);
 void send_payload(uint8_t *payload, uint8_t pwr, uint8_t retry);
 void set_pairing_mode(void);
@@ -68,12 +67,13 @@ bool receive_ping(uint8_t timeout);
 void set_normal_mode(void);
 void save_flash(void);
 void load_flash(void);
-void transmit (void);
+void transmit (KLESS_CMD cmd, hal_nrf_output_power_t power);
 
 // ======================================= Main function 
 void main(void){
 	// local variable
 	uint8_t pairing_success;	
+	uint8_t i;
 	// Initialise GPIO
 	pin_init();
 	// Initialise RTC
@@ -106,31 +106,40 @@ void main(void){
 				update_configuration(&pairing_success);
 				// indicator result
 				if(pairing_success){
-					LED_1 = 0;
-					LED_2 = 0;
-				} else {
 					LED_1 = 1;
 					LED_2 = 1;
+				} else {
+					LED_1 = 0;
+					LED_2 = 0;
+				}
+				set_normal_mode();				
+				// Wait until button released
+				wait_button_released();
+			} 
+			
+			else if(BTN_ALARM){
+				for(i=0; i<5; i++) {
+					transmit(KLESS_CMD_ALARM, HAL_NRF_0DBM);
+					delay_ms(5);
 				}
 				
-				set_normal_mode();
-				
-			// Wait until button released
-			wait_button_released();
-				
-			} else if(BTN_ALARM){
-				transmit();
 				// indicator
 				LED_2 = !LED_2;
 			}
-		} 
+		}
 		
-			// Normal Mode
-			if (receive_ping(20) && !BTN_ALARM){
-				transmit();
-				// indicator
-				LED_1 = !LED_1;
+		// Normal Mode
+		if (receive_ping(10)){
+			if(BTN_SEAT) {
+				for(i=0; i<5; i++) {
+					transmit(KLESS_CMD_SEAT, HAL_NRF_18DBM);
+					delay_ms(5);
+				}
 			}
+			else transmit(KLESS_CMD_PING, HAL_NRF_18DBM);
+			// indicator
+			LED_1 = !LED_1;
+		}
 
 		// reset wdog
 		hal_wdog_restart();	
@@ -141,12 +150,7 @@ void main(void){
 }
 
 // ======================================= Function declaration
-void transmit (void){
-	KLESS_CMD command;
-	hal_nrf_output_power_t power;
-	
-	// Generate Command				
-	make_command(&command, &power);
+void transmit (KLESS_CMD command, hal_nrf_output_power_t power){
 	// Insert command to payload
 	make_payload(payload, command);
 	// Encrypt payload
@@ -301,22 +305,6 @@ void make_payload(uint8_t *payload, uint8_t cmd){
 	//memcpy(payload+8, &commands[cmd], 8);
 }
 
-void make_command(KLESS_CMD *cmd, hal_nrf_output_power_t *pwr){		
-	// handle each buttons
-	*pwr = HAL_NRF_18DBM;
-	if(BTN_SEAT)	{
-		*cmd = KLESS_CMD_SEAT;
-	} 
-	else if (BTN_ALARM){
-		// Button Command Mode				
-		*cmd = KLESS_CMD_ALARM;
-		*pwr = HAL_NRF_0DBM;
-	}
-	else {
-		*cmd = KLESS_CMD_PING;
-	}		
-}
-
 void make_random_number(uint8_t *p){
 	uint8_t len = (DATA_LENGTH/2);
 	
@@ -337,24 +325,22 @@ void pin_init(void){
 			P0CON = 0x70 + i;
 			P1CON = 0x70 + i;
 	} 
-	P0DIR = 0x0B; 
-	P1DIR = 0x00;
+	P0DIR = 0x50; 
 
-	P1CON = 0x00 + 3; // Set P1.3 as outputb  again
-	P1CON = 0x00 + 0; // Set P1.1 as output again
-	P0CON = 0x10 + 1; // Set P0.1 as input again
-	P0CON = 0x10 + 3; // Set P0.3 as input again
+	P0CON = 0x00 + 3; // Set P1.3 as outputb  again
+	P0CON = 0x00 + 2; // Set P1.1 as output again
+	P0CON = 0x50 + 6; // Set P0.1 as input again
+	P0CON = 0x50 + 4; // Set P0.3 as input again
 		
-	P0 = 0x00;
-	P1 = 0x00;
+	P0 = 0xff;
 	
-	WUOPC0 = 0x0B;	//set pin P0.3 & P0.1 as wake-up pin
-	OPMCON = 0x00;	//latch open and wake-up pin active high
+	WUOPC0 = 0x00;	//set pin P0.4 & P0.6 as wake-up pin
+//	OPMCON = 0x00;	//latch open and wake-up pin active high
 	
 	// Set default 
 	TRANSISTOR = 1;
-	LED_1 = 0;
-	LED_2 = 0;
+	LED_1 = 1;
+	LED_2 = 1;
 }
 
 void nrf_init(void){
