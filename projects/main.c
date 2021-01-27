@@ -18,7 +18,7 @@
 #include <string.h>
 
 // ======================================= Type definition
-#define TRANSISTOR						P10
+#define TRANSISTOR						P14
 #define LED_1									P02
 #define LED_2									P03
 #define BTN_ALARM							!P04
@@ -106,10 +106,10 @@ void main(void){
 				update_configuration(&pairing_success);
 				// indicator result
 				if(pairing_success){
-					LED_1 = 1;
+					//LED_1 = 1;
 					LED_2 = 1;
 				} else {
-					LED_1 = 0;
+					//LED_1 = 0;
 					LED_2 = 0;
 				}
 				set_normal_mode();				
@@ -118,27 +118,32 @@ void main(void){
 			} 
 			
 			else if(BTN_ALARM){
+				// indicator
+				LED_2 = 0;
+				
 				for(i=0; i<5; i++) {
 					transmit(KLESS_CMD_ALARM, HAL_NRF_0DBM);
 					delay_ms(5);
 				}
-				
-				// indicator
-				LED_2 = !LED_2;
-			}
+				LED_2 = 1;
+			} 
 		}
 		
 		// Normal Mode
 		if (receive_ping(10)){
 			if(BTN_SEAT) {
+				// indicator
+				LED_2 = 0;
+				
 				for(i=0; i<5; i++) {
-					transmit(KLESS_CMD_SEAT, HAL_NRF_18DBM);
+					transmit(KLESS_CMD_SEAT, HAL_NRF_6DBM);
 					delay_ms(5);
 				}
+				LED_2 = 1;
 			}
-			else transmit(KLESS_CMD_PING, HAL_NRF_18DBM);
+			else transmit(KLESS_CMD_PING, HAL_NRF_6DBM);
 			// indicator
-			LED_1 = !LED_1;
+			//LED_1 = !LED_1;
 		}
 
 		// reset wdog
@@ -215,8 +220,8 @@ void receive_pairing(void){
 	received = false;
 	while (!received && (BTN_ALARM && BTN_SEAT)){
 		// Indicator
-		LED_1 = !LED_1;
-		LED_2 = !LED_1;
+		//LED_1 = !LED_1;
+		LED_2 = !LED_2;
 
 		hal_wdog_restart();
 		delay_ms(100);
@@ -325,14 +330,17 @@ void pin_init(void){
 			P0CON = 0x70 + i;
 			P1CON = 0x70 + i;
 	} 
-	P0DIR = 0x50; 
+	P0DIR = 0x50;
+	P1DIR = 0x00;	
 
-	P0CON = 0x00 + 3; // Set P1.3 as outputb  again
-	P0CON = 0x00 + 2; // Set P1.1 as output again
-	P0CON = 0x50 + 6; // Set P0.1 as input again
-	P0CON = 0x50 + 4; // Set P0.3 as input again
+	P0CON = 0x00 + 3; // Set P0.3 as output again
+	P0CON = 0x00 + 2; // Set P0.2 as output again
+	P0CON = 0x50 + 6; // Set P0.6 as input again
+	P0CON = 0x50 + 4; // Set P0.4 as input again
+	P1CON = 0x00 + 4; // Set P1.4 as output again
 		
 	P0 = 0xff;
+	P1 = 0x00;
 	
 	WUOPC0 = 0x00;	//set pin P0.4 & P0.6 as wake-up pin
 //	OPMCON = 0x00;	//latch open and wake-up pin active high
@@ -345,13 +353,13 @@ void pin_init(void){
 
 void nrf_init(void){
 	// Setting datarate
-	hal_nrf_set_datarate(HAL_NRF_1MBPS);
+	hal_nrf_set_datarate(HAL_NRF_250KBPS);
 	//setting crc
 	hal_nrf_set_crc_mode(HAL_NRF_CRC_8BIT);
 	//setting address
 	hal_nrf_set_address_width(HAL_NRF_AW_5BYTES);
 	//setting auto retransmitt
-	hal_nrf_set_auto_retr(0x0F,0x0F);
+	hal_nrf_set_auto_retr(0,0);
 	//settinf RF channel
 	hal_nrf_set_rf_channel(110);
 	//setting Tx address
