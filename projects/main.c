@@ -75,7 +75,7 @@ void ledToggle(void);
 
 // ======================================= Main function 
 void main(void){
-	uint8_t i, show_ping = 0;
+	uint8_t show_ping = 0;
 	uint32_t ms;
 	
 	pin_init();
@@ -98,7 +98,7 @@ void main(void){
 
 				// indicator result
 				if (pairing_ok()){
-					update_configuration()
+					update_configuration();
 					//LED_1 = 1;
 					ledOn(0);
 				} else {
