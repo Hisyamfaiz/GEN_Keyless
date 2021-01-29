@@ -64,14 +64,14 @@ void set_pairing_mode(void);
 void receive_pairing(void);
 void update_configuration(void);
 uint8_t pairing_ok(void);
-void wait_all_button_released(void);
+uint32_t wait_btn_released(void *btn);
 bool receive_ping(uint8_t timeout);
 void set_normal_mode(void);
 void save_flash(void);
 void load_flash(void);
 void transmit(KLESS_CMD cmd, hal_nrf_output_power_t power, uint8_t retry);
-void ledOn(uint8_t on);
-void ledToggle(void);
+void ledWrite(uint8_t state);
+uint8_t ledRead(void);
 
 // ======================================= Main function 
 void main(void){
@@ -81,9 +81,7 @@ void main(void){
 	pin_init();
 	rtc_init();
 	clock_and_irq_init();
-	
 	load_flash();
-	
 	nrf_init();
 	hal_wdog_init(0x0300);
 
@@ -96,53 +94,37 @@ void main(void){
 				set_pairing_mode();
 				receive_pairing();
 
-				// indicator result
-				if (pairing_ok()){
+				if (pairing_ok()) {
 					update_configuration();
-					//LED_1 = 1;
-					ledOn(0);
-				} else {
-					//LED_1 = 0;
-					ledOn(1);
-				}
-				set_normal_mode();				
-				wait_all_button_released();
+					ledWrite(0);
+				} else 
+					ledWrite(1);
+
+				set_normal_mode();			
+				wait_btn_released(&BTN_ALARM);
+				wait_btn_released(&BTN_SEAT);
 			} 
 			
 			else if (BTN_ALARM) {
-				ms = 0;
-				while(BTN_ALARM) {
-					hal_wdog_restart();
-					delay_ms(100);
-					ms+=100;
-				}
-
-				if (ms > 3000) show_ping = !show_ping;
-				else transmit(KLESS_CMD_ALARM, HAL_NRF_0DBM, 5);
+				if (wait_btn_released(&BTN_ALARM) > 3000) 
+					show_ping = !show_ping;
+				else 
+					transmit(KLESS_CMD_ALARM, HAL_NRF_0DBM, 5);
 			} 
-
-			else {
-				ms = 0;
-				while(BTN_SEAT) {
-					hal_wdog_restart();
-					delay_ms(100);
-					ms+=100;
-				}
-
-				if (ms > 3000) disable_radio = !disable_radio;
-			}
 		}
 		
-		// Normal Mode
-		if (receive_ping(10)){
-			if (BTN_SEAT) transmit(KLESS_CMD_SEAT, HAL_NRF_6DBM, 5);
-			else transmit(KLESS_CMD_PING, HAL_NRF_6DBM, 1);
+		if (BTN_SEAT) {
+			if (wait_btn_released(&BTN_SEAT) > 3000) 
+				disable_radio = !disable_radio;
+			else if (receive_ping(10))
+				transmit(KLESS_CMD_SEAT, HAL_NRF_6DBM, 5);
+		} else if (receive_ping(10)) {
+			transmit(KLESS_CMD_PING, HAL_NRF_6DBM, 1);
 
-			// indicator
 			if (show_ping) {
-				ledOn(1);
-				delay_ms(25);
-				ledOn(0);
+				ledWrite(1);
+				delay_ms(20);
+				ledWrite(0);
 			}
 		}
 
@@ -152,22 +134,16 @@ void main(void){
 }
 
 // ======================================= Function declaration
-void ledToggle(void) {
-	if (disable_radio) {
-		LED_1 = !LED_1;
-		LED_2 = 1;
-	} else {
-		LED_2 = !LED_2;
-		LED_1 = 1;
-	}
+uint8_t ledRead(void) {
+	return disable_radio ? LED_1 : LED_2;
 }
 
-void ledOn(uint8_t on) {
+void ledWrite(uint8_t state) {
 	if (disable_radio) {
-		LED_1 = !on;
+		LED_1 = !state;
 		LED_2 = 1;
 	} else {
-		LED_2 = !on;
+		LED_2 = !state;
 		LED_1 = 1;
 	}
 }
@@ -176,21 +152,21 @@ void transmit(KLESS_CMD command, hal_nrf_output_power_t power, uint8_t retry){
 	make_payload(payload, command);
 	hal_aes_crypt(payload_enc, payload);
 
-	if (retry > 1) ledOn(1);
-
-	while(retry--) {
-		send_payload(payload_enc, power, 1);
-		if (retry) delay_ms(5);
-	}
-	
-	ledOn(0);
+	if (retry > 1) ledWrite(1);
+	send_payload(payload_enc, power, retry);
+	if (retry > 1) ledWrite(0);
 }
 
-void wait_all_button_released(void){
-		while(BTN_ALARM || BTN_SEAT){
-			hal_wdog_restart();
-			delay_ms(50);
-		}
+uint32_t wait_btn_released(void *btn) {
+	uint32_t ms = 0;
+
+	while(*btn) {
+		hal_wdog_restart();
+		delay_ms(50);
+		ms+=50;
+	}
+
+	return ms;
 }
 
 void load_flash(void){
@@ -199,10 +175,9 @@ void load_flash(void){
 	hal_flash_bytes_read(VADDR_VCU_ID, vcu_id, sizeof(uint32_t));
 	hal_flash_bytes_read(VADDR_AES_KEY, (uint8_t*)AES_Key, DATA_LENGTH);
 	
-	// Apply address
 	memcpy(tx_address, vcu_id, sizeof(uint32_t));
 	memcpy(rx_address, vcu_id, sizeof(uint32_t));
-	// Initialise AES
+
 	hal_aes_setup(0, ECB, (uint8_t*)AES_Key, NULL);
 }
 
@@ -232,9 +207,7 @@ void receive_pairing(void){
 	CE_HIGH();
 	received = false;
 	while (!received && (BTN_ALARM && BTN_SEAT)){
-		// Indicator
-		//LED_1 = !LED_1;
-		ledToggle();
+		ledWrite(!ledRead())
 		hal_wdog_restart();
 		delay_ms(100);
 	}
@@ -282,17 +255,16 @@ void set_normal_mode(void) {
 void send_payload(uint8_t *payload, uint8_t pwr, uint8_t retry){
 	hal_nrf_write_tx_payload(payload, DATA_LENGTH);
 	hal_nrf_set_output_power(pwr);
+	hal_nrf_set_operation_mode(HAL_NRF_PTX);
+
 	TRANSISTOR = (pwr != HAL_NRF_0DBM);
 	hal_nrf_set_power_mode(HAL_NRF_PWR_UP);
-	hal_nrf_set_operation_mode(HAL_NRF_PTX);
-	
 	while(retry--){
 		CE_HIGH();
 		radio_busy = true;
 		while (radio_busy){}
 		CE_LOW();
-	}
-		
+	}	
 	hal_nrf_set_power_mode(HAL_NRF_PWR_DOWN);
 	TRANSISTOR = 1;	
 }
