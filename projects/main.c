@@ -76,7 +76,6 @@ uint8_t ledRead(void);
 // ======================================= Main function 
 void main(void){
 	uint8_t show_ping = 0;
-	uint32_t ms;
 	
 	pin_init();
 	rtc_init();
