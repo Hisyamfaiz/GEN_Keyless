@@ -114,7 +114,7 @@ void main(void){
         if (wait_btn_released(&BTN_SEAT) > 3000) 
           disable_radio = !disable_radio;
         else if (receive_ping(10)) {
-          transmit(KLESS_CMD_SEAT, HAL_NRF_6DBM, 5);
+          transmit(KLESS_CMD_SEAT, HAL_NRF_6DBM, 1);
           led_blink();
         }
       } 
