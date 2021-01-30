@@ -14,9 +14,8 @@
 #include "hal_rng.h"
 #include "hal_flash.h"
 #include <stdint.h>
-#include <stduint8_t.h>
 #include <string.h>
-
+ 
 // ======================================= Type definition
 #define TRANSISTOR						P14
 #define LED_1									P02
