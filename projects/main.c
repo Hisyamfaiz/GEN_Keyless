@@ -14,7 +14,7 @@
 #include "hal_rng.h"
 #include "hal_flash.h"
 #include <stdint.h>
-#include <stdbool.h>
+#include <stduint8_t.h>
 #include <string.h>
 
 // ======================================= Type definition
@@ -38,13 +38,12 @@ typedef enum {
 } KLESS_CMD;
 
 // ======================================= Global variable
-static uint8_t disable_radio = 0;
-static bool volatile radio_busy, received;
+static uint8_t volatile radio_busy, received, disable_radio = 0;
 static uint8_t tx_address[ADDR_LENGTH] = {0x00, 0x00, 0x00, 0x00, 0xCD};
 static uint8_t rx_address[ADDR_LENGTH] = {0x00, 0x00, 0x00, 0x00, 0xAB};
 static uint8_t xdata payload[DATA_PAIR_LENGTH];
 static uint8_t xdata payload_enc[DATA_LENGTH];
-static uint32_t idata AES_Key[4];
+static uint32_t idata aes_key[4];
 static const uint8_t idata commands[3][8] = {
 	{ 0x5e, 0x6c, 0xa7, 0x74, 0xfd, 0xe3, 0xdf, 0xbc },
 	{ 0xf7, 0xda, 0x4a, 0x4f, 0x65, 0x2d, 0x6e, 0xf0 },
@@ -61,17 +60,16 @@ void make_random_number(uint8_t *p);
 void make_payload(uint8_t *payload, uint8_t cmd);
 void send_payload(uint8_t *payload, uint8_t pwr, uint8_t retry);
 void set_pairing_mode(void);
-void receive_pairing(void);
+uint8_t receive_pairing(void);
 void update_configuration(void);
-uint8_t pairing_ok(void);
-uint32_t wait_btn_released(void *btn);
-bool receive_ping(uint8_t timeout);
 void set_normal_mode(void);
 void save_flash(void);
 void load_flash(void);
 void transmit(KLESS_CMD cmd, hal_nrf_output_power_t power, uint8_t retry);
 void ledWrite(uint8_t state);
 uint8_t ledRead(void);
+uint8_t receive_ping(uint8_t timeout);
+uint32_t wait_btn_released(void *btn);
 
 // ======================================= Main function 
 void main(void){
@@ -84,16 +82,14 @@ void main(void){
 	nrf_init();
 	hal_wdog_init(0x0300);
 
-	while(1)	{						
-		if (BTN_ALARM || BTN_SEAT){
+	while(1)	{				
+		if (BTN_ALARM || BTN_SEAT) {
 			delay_ms(100);
-				
-			// Pairing Mode
+
 			if (BTN_ALARM && BTN_SEAT){				
 				set_pairing_mode();
-				receive_pairing();
 
-				if (pairing_ok()) {
+				if (receive_pairing()) {
 					update_configuration();
 					ledWrite(0);
 				} else 
@@ -103,21 +99,23 @@ void main(void){
 				wait_btn_released(&BTN_ALARM);
 				wait_btn_released(&BTN_SEAT);
 			} 
-			
+
 			else if (BTN_ALARM) {
 				if (wait_btn_released(&BTN_ALARM) > 3000) 
 					show_ping = !show_ping;
 				else 
 					transmit(KLESS_CMD_ALARM, HAL_NRF_0DBM, 5);
 			} 
+			
+			else if (BTN_SEAT) {
+				if (wait_btn_released(&BTN_SEAT) > 3000) 
+					disable_radio = !disable_radio;
+				else if (receive_ping(10))
+					transmit(KLESS_CMD_SEAT, HAL_NRF_6DBM, 5);
+			} 
 		}
-		
-		if (BTN_SEAT) {
-			if (wait_btn_released(&BTN_SEAT) > 3000) 
-				disable_radio = !disable_radio;
-			else if (receive_ping(10))
-				transmit(KLESS_CMD_SEAT, HAL_NRF_6DBM, 5);
-		} else if (receive_ping(10)) {
+						
+		else if (receive_ping(10)) {
 			transmit(KLESS_CMD_PING, HAL_NRF_6DBM, 1);
 
 			if (show_ping) {
@@ -147,7 +145,7 @@ void ledWrite(uint8_t state) {
 	}
 }
 
-void transmit(KLESS_CMD command, hal_nrf_output_power_t power, uint8_t retry){
+void transmit(KLESS_CMD command, hal_nrf_output_power_t power, uint8_t retry) {
 	make_payload(payload, command);
 	hal_aes_crypt(payload_enc, payload);
 
@@ -169,19 +167,16 @@ uint32_t wait_btn_released(void *btn) {
 }
 
 void load_flash(void){
-	uint8_t vcu_id[4];
+	uint8_t vcu_size = sizeof(uint32_t);
+	uint8_t vcu_id[vcu_size];
 	
-	hal_flash_bytes_read(VADDR_VCU_ID, vcu_id, sizeof(uint32_t));
-	hal_flash_bytes_read(VADDR_AES_KEY, (uint8_t*)AES_Key, DATA_LENGTH);
+	hal_flash_bytes_read(VADDR_VCU_ID, vcu_id, vcu_size);
+	hal_flash_bytes_read(VADDR_AES_KEY, (uint8_t*)aes_key, DATA_LENGTH);
 	
-	memcpy(tx_address, vcu_id, sizeof(uint32_t));
-	memcpy(rx_address, vcu_id, sizeof(uint32_t));
+	memcpy(tx_address, vcu_id, vcu_size);
+	memcpy(rx_address, vcu_id, vcu_size);
 
-	hal_aes_setup(0, ECB, (uint8_t*)AES_Key, NULL);
-}
-
-uint8_t pairing_ok(void) {
-	return (received && (payload[DATA_PAIR_LENGTH - 1] == 0xAB));
+	hal_aes_setup(0, ECB, (uint8_t*)aes_key, NULL);
 }
 
 void update_configuration(void){
@@ -198,7 +193,7 @@ void save_flash(void){
 	hal_flash_bytes_write(VADDR_AES_KEY, payload, DATA_LENGTH);
 }
 
-void receive_pairing(void){
+uint8_t receive_pairing(void){
 	hal_nrf_set_power_mode(HAL_NRF_PWR_UP);
 	hal_nrf_set_operation_mode(HAL_NRF_PRX); 
 	
@@ -206,7 +201,7 @@ void receive_pairing(void){
 	CE_HIGH();
 	received = false;
 	while (!received && (BTN_ALARM && BTN_SEAT)){
-		ledWrite(!ledRead())
+		ledWrite(!ledRead());
 		hal_wdog_restart();
 		delay_ms(100);
 	}
@@ -214,9 +209,11 @@ void receive_pairing(void){
 	
 	hal_nrf_set_power_mode(HAL_NRF_PWR_DOWN);
 	hal_nrf_set_rx_payload_width(HAL_NRF_PIPE0, DATA_LENGTH);	
+
+	return (received && (payload[DATA_PAIR_LENGTH - 1] == 0xAB));
 }
 
-bool receive_ping(uint8_t timeout){
+uint8_t receive_ping(uint8_t timeout){
 	uint32_t ms = 0;
 	
 	hal_nrf_set_power_mode(HAL_NRF_PWR_UP);
@@ -238,7 +235,6 @@ bool receive_ping(uint8_t timeout){
 }
 
 void set_pairing_mode(void) {
-	// Set paring address
 	memset(tx_address, 0x00, sizeof(uint32_t));
 	memset(rx_address, 0x00, sizeof(uint32_t));
 	
@@ -277,7 +273,7 @@ void make_random_number(uint8_t *p){
 	
 	hal_rng_power_up(1);
 	while(len--){
-		while(!hal_rng_data_ready()){};
+		while(!hal_rng_data_ready()) {};
 		*(p++) = hal_rng_read();
 	}
 	hal_rng_power_up(0);
@@ -287,7 +283,7 @@ void pin_init(void){
 	char i;
 	
 	// Disconnect unused GPIOs to avoid them floating in sleep
-	for (i = 0; i < 8; i++){
+	for (i = 0; i < 8; i++) {
 			P0CON = 0x70 + i;
 			P1CON = 0x70 + i;
 	} 
