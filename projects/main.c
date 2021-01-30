@@ -64,10 +64,9 @@ void set_normal_mode(void);
 void transmit(KLESS_CMD cmd, hal_nrf_output_power_t power, uint8_t retry);
 uint8_t receive_pairing(void);
 uint8_t receive_ping(uint8_t timeout);
-void update_configuration(void);
-void save_flash(void);
+void update_flash(void);
 void load_flash(void);
-void led_blink(void);
+void led_blink(uint32_t ms);
 void led_write(uint8_t state);
 uint8_t led_read(void);
 uint32_t wait_btn_released(void *btn);
@@ -87,11 +86,11 @@ void main(void){
     if (BTN_ALARM || BTN_SEAT) {
       delay_ms(100);
 
-      if (BTN_ALARM && BTN_SEAT){				
+      if (BTN_ALARM && BTN_SEAT) {				
         set_pairing_mode();
 
         if (receive_pairing()) {
-          update_configuration();
+          update_flash();
           led_write(0);
         } else 
           led_write(1);
@@ -106,7 +105,7 @@ void main(void){
           show_ping = !show_ping;
         else {
           transmit(KLESS_CMD_ALARM, HAL_NRF_0DBM, 5);
-          led_blink();
+          led_blink(20);
         }
       } 
       
@@ -115,14 +114,14 @@ void main(void){
           disable_radio = !disable_radio;
         else if (receive_ping(10)) {
           transmit(KLESS_CMD_SEAT, HAL_NRF_6DBM, 1);
-          led_blink();
+          led_blink(20);
         }
       } 
     }
             
     else if (receive_ping(10)) {
       transmit(KLESS_CMD_PING, HAL_NRF_6DBM, 1);
-      if (show_ping) led_blink();
+      if (show_ping) led_blink(10);
     }
 
     hal_wdog_restart();	
@@ -131,9 +130,9 @@ void main(void){
 }
 
 // ======================================= Function declaration
-void led_blink(void) {
+void led_blink(uint32_t ms) {
   led_write(1);
-  delay_ms(20);
+  delay_ms(ms);
   led_write(0);
 }
 
@@ -233,6 +232,10 @@ void set_pairing_mode(void) {
 }
 
 void set_normal_mode(void) {
+  load_flash();
+  
+  hal_nrf_set_address(HAL_NRF_TX, tx_address);
+  hal_nrf_set_address(HAL_NRF_PIPE0, rx_address);
   hal_nrf_set_rx_payload_width(HAL_NRF_PIPE0, DATA_LENGTH);
 }
 
@@ -263,12 +266,10 @@ uint32_t wait_btn_released(void *btn) {
   return ms;
 }
 
-void update_configuration(void){
-  save_flash();
-  load_flash();
-  
-  hal_nrf_set_address(HAL_NRF_TX, tx_address);
-  hal_nrf_set_address(HAL_NRF_PIPE0, rx_address);
+void update_flash(void){
+  hal_flash_page_erase(HAL_DATA_NV_FLASH_PN0);
+  hal_flash_bytes_write(VADDR_VCU_ID, &payload[DATA_LENGTH], sizeof(uint32_t));
+  hal_flash_bytes_write(VADDR_AES_KEY, payload, DATA_LENGTH);
 }
 
 void load_flash(void){
@@ -282,12 +283,6 @@ void load_flash(void){
   memcpy(rx_address, vcu_id, vcu_size);
 
   hal_aes_setup(0, ECB, (uint8_t*)aes_key, NULL);
-}
-
-void save_flash(void){
-  hal_flash_page_erase(HAL_DATA_NV_FLASH_PN0);
-  hal_flash_bytes_write(VADDR_VCU_ID, &payload[DATA_LENGTH], sizeof(uint32_t));
-  hal_flash_bytes_write(VADDR_AES_KEY, payload, DATA_LENGTH);
 }
 
 
