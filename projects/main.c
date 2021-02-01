@@ -58,7 +58,7 @@ void sleep_mode(void);
 
 void make_random_number(uint8_t *p);
 void make_payload(uint8_t *payload, uint8_t cmd);
-void send_payload(uint8_t *payload, uint8_t pwr, uint8_t retry);
+void send_payload(uint8_t *payload, uint8_t pwr);
 void set_pairing_mode(void);
 void set_normal_mode(void);
 void transmit(KLESS_CMD cmd, hal_nrf_output_power_t power, uint8_t retry);
@@ -102,20 +102,20 @@ void main(void){
       } 
 
       else if (BTN_ALARM) {
-        if (wait_btn_alarm() > 3000) 
+        if (wait_btn_alarm() > 5000) 
           show_ping = !show_ping;
         else {
           transmit(KLESS_CMD_ALARM, HAL_NRF_0DBM, 5);
-          led_blink(20);
+          led_blink(10);
         }
       } 
       
       else if (BTN_SEAT) {
-        if (wait_btn_seat() > 3000) 
+        if (wait_btn_seat() > 5000) 
           disable_radio = !disable_radio;
         else if (receive_ping(10)) {
           transmit(KLESS_CMD_SEAT, HAL_NRF_6DBM, 1);
-          led_blink(20);
+          led_blink(10);
         }
       } 
     }
@@ -152,28 +152,27 @@ void led_write(uint8_t state) {
 }
 
 void transmit(KLESS_CMD command, hal_nrf_output_power_t power, uint8_t retry) {
-  if (disable_radio) return;
-
-  make_payload(payload, command);
-  hal_aes_crypt(payload_enc, payload);
-  send_payload(payload_enc, power, retry);
+  if (!disable_radio) {
+		make_payload(payload, command);
+		hal_aes_crypt(payload_enc, payload);
+		while(retry--)
+			send_payload(payload_enc, power);
+	}
 }
 
-void send_payload(uint8_t *payload, uint8_t pwr, uint8_t retry) {
-  if (disable_radio) return;
-
+void send_payload(uint8_t *payload, uint8_t pwr) {
   hal_nrf_write_tx_payload(payload, DATA_LENGTH);
   hal_nrf_set_output_power(pwr);
-  hal_nrf_set_operation_mode(HAL_NRF_PTX);
-
+	
   TRANSISTOR = (pwr != HAL_NRF_0DBM);
   hal_nrf_set_power_mode(HAL_NRF_PWR_UP);
-  while(retry--){
+  hal_nrf_set_operation_mode(HAL_NRF_PTX);
+
     CE_HIGH();
     radio_busy = true;
     while (radio_busy){}
     CE_LOW();
-  }	
+			
   hal_nrf_set_power_mode(HAL_NRF_PWR_DOWN);
   TRANSISTOR = 1;	
 }
