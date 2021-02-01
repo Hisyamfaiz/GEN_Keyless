@@ -69,7 +69,8 @@ void load_flash(void);
 void led_blink(uint32_t ms);
 void led_write(uint8_t state);
 uint8_t led_read(void);
-uint32_t wait_btn_released(void *btn);
+uint32_t wait_btn_seat(void);
+uint32_t wait_btn_alarm(void);
 
 // ======================================= Main function 
 void main(void){
@@ -96,12 +97,12 @@ void main(void){
           led_write(1);
 
         set_normal_mode();			
-        wait_btn_released(&BTN_ALARM);
-        wait_btn_released(&BTN_SEAT);
+        wait_btn_alarm();
+        wait_btn_seat();
       } 
 
       else if (BTN_ALARM) {
-        if (wait_btn_released(&BTN_ALARM) > 3000) 
+        if (wait_btn_alarm() > 3000) 
           show_ping = !show_ping;
         else {
           transmit(KLESS_CMD_ALARM, HAL_NRF_0DBM, 5);
@@ -110,7 +111,7 @@ void main(void){
       } 
       
       else if (BTN_SEAT) {
-        if (wait_btn_released(&BTN_SEAT) > 3000) 
+        if (wait_btn_seat() > 3000) 
           disable_radio = !disable_radio;
         else if (receive_ping(10)) {
           transmit(KLESS_CMD_SEAT, HAL_NRF_6DBM, 1);
@@ -137,7 +138,7 @@ void led_blink(uint32_t ms) {
 }
 
 uint8_t led_read(void) {
-  return disable_radio ? LED_1 : LED_2;
+  return disable_radio ? !LED_1 : !LED_2;
 }
 
 void led_write(uint8_t state) {
@@ -178,7 +179,7 @@ void send_payload(uint8_t *payload, uint8_t pwr, uint8_t retry) {
 }
 
 uint8_t receive_pairing(void){
-  if (disable_radio) return;
+  if (disable_radio) return 0;
   
   hal_nrf_set_power_mode(HAL_NRF_PWR_UP);
   hal_nrf_set_operation_mode(HAL_NRF_PRX); 
@@ -202,7 +203,7 @@ uint8_t receive_pairing(void){
 uint8_t receive_ping(uint8_t timeout){
   uint32_t ms = 0;
   
-  if (disable_radio) return;
+  if (disable_radio) return 0;
   
   hal_nrf_set_power_mode(HAL_NRF_PWR_UP);
   hal_nrf_set_operation_mode(HAL_NRF_PRX); 
@@ -254,10 +255,22 @@ void make_random_number(uint8_t *p){
   hal_rng_power_up(0);
 }
 
-uint32_t wait_btn_released(void *btn) {
+uint32_t wait_btn_seat(void) {
   uint32_t ms = 0;
 
-  while(*btn) {
+  while(BTN_SEAT) {
+    hal_wdog_restart();
+    delay_ms(50);
+    ms+=50;
+  }
+
+  return ms;
+}
+
+uint32_t wait_btn_alarm(void) {
+  uint32_t ms = 0;
+
+  while(BTN_ALARM) {
     hal_wdog_restart();
     delay_ms(50);
     ms+=50;
@@ -274,7 +287,7 @@ void update_flash(void){
 
 void load_flash(void){
   uint8_t vcu_size = sizeof(uint32_t);
-  uint8_t vcu_id[vcu_size];
+  uint8_t vcu_id[sizeof(uint32_t)];
   
   hal_flash_bytes_read(VADDR_VCU_ID, vcu_id, vcu_size);
   hal_flash_bytes_read(VADDR_AES_KEY, (uint8_t*)aes_key, DATA_LENGTH);
