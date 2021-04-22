@@ -113,15 +113,15 @@ void main(void){
       else if (BTN_SEAT) {
         if (wait_btn_seat() > 5000) 
           disable_radio = !disable_radio;
-        else if (receive_ping(10)) {
-          transmit(KLESS_CMD_SEAT, HAL_NRF_6DBM, 1);
+        else if (receive_ping(15)) {
+          transmit(KLESS_CMD_SEAT, HAL_NRF_0DBM, 1);
           led_blink(10);
         }
       } 
     }
             
-    else if (receive_ping(10)) {
-      transmit(KLESS_CMD_PING, HAL_NRF_6DBM, 1);
+    else if (receive_ping(15)) {
+      transmit(KLESS_CMD_PING, HAL_NRF_0DBM, 1);
       if (show_ping) led_blink(10);
     }
 
@@ -155,8 +155,11 @@ void transmit(KLESS_CMD command, hal_nrf_output_power_t power, uint8_t retry) {
   if (!disable_radio) {
 		make_payload(payload, command);
 		hal_aes_crypt(payload_enc, payload);
+		
+		TRANSISTOR = (command != KLESS_CMD_ALARM);
 		while(retry--)
 			send_payload(payload_enc, power);
+		TRANSISTOR = 1;	
 	}
 }
 
@@ -164,7 +167,6 @@ void send_payload(uint8_t *payload, uint8_t pwr) {
   hal_nrf_write_tx_payload(payload, DATA_LENGTH);
   hal_nrf_set_output_power(pwr);
 	
-  TRANSISTOR = (pwr != HAL_NRF_0DBM);
   hal_nrf_set_power_mode(HAL_NRF_PWR_UP);
   hal_nrf_set_operation_mode(HAL_NRF_PTX);
 
@@ -174,7 +176,6 @@ void send_payload(uint8_t *payload, uint8_t pwr) {
     CE_LOW();
 			
   hal_nrf_set_power_mode(HAL_NRF_PWR_DOWN);
-  TRANSISTOR = 1;	
 }
 
 uint8_t receive_pairing(void){
@@ -196,7 +197,7 @@ uint8_t receive_pairing(void){
   hal_nrf_set_power_mode(HAL_NRF_PWR_DOWN);
   hal_nrf_set_rx_payload_width(HAL_NRF_PIPE0, DATA_LENGTH);	
 
-  return (received && (payload[DATA_PAIR_LENGTH - 1] == 0xAB));
+  return ((payload[DATA_PAIR_LENGTH - 1] == 0xAB));
 }
 
 uint8_t receive_ping(uint8_t timeout){
