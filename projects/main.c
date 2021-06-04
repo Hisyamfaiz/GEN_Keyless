@@ -30,23 +30,27 @@
 #define ADDR_LENGTH						5
 #define DATA_PAIR_LENGTH		  (DATA_LENGTH + ADDR_LENGTH)
 
+#define LONGBUTTON_MS					3000
+
 typedef enum {
-  KLESS_CMD_PING 	= 0,
-  KLESS_CMD_ALARM = 1,
-  KLESS_CMD_SEAT 	= 2
+  KLESS_CMD_PING 			= 0,
+  KLESS_CMD_ALARM 		= 1,
+  KLESS_CMD_SEAT 			= 2,
+	KLESS_CMD_ANTITHIEF = 3
 } KLESS_CMD;
 
 // ======================================= Global variable
-static uint8_t volatile radio_busy, received, disable_radio = 0;
+static uint8_t volatile radio_busy, received;
 static uint8_t tx_address[ADDR_LENGTH] = {0x00, 0x00, 0x00, 0x00, 0xCD};
 static uint8_t rx_address[ADDR_LENGTH] = {0x00, 0x00, 0x00, 0x00, 0xAB};
 static uint8_t xdata payload[DATA_PAIR_LENGTH];
 static uint8_t xdata payload_enc[DATA_LENGTH];
 static uint32_t idata aes_key[4];
-static const uint8_t idata commands[3][8] = {
+static const uint8_t idata commands[4][8] = {
   { 0x5e, 0x6c, 0xa7, 0x74, 0xfd, 0xe3, 0xdf, 0xbc },
   { 0xf7, 0xda, 0x4a, 0x4f, 0x65, 0x2d, 0x6e, 0xf0 },
-  { 0xff, 0xa6, 0xe6, 0x5a, 0x84, 0x82, 0x66, 0x4f }
+  { 0xff, 0xa6, 0xe6, 0x5a, 0x84, 0x82, 0x66, 0x4f },
+	{ 0xab, 0xf5, 0x83, 0xc4, 0xe9, 0x27, 0x0a, 0xb2 }
 };
 
 // ======================================= Function prototype 
@@ -102,17 +106,17 @@ void main(void){
       } 
 
       else if (BTN_ALARM) {
-        if (wait_btn_alarm() > 5000) 
-          show_ping = !show_ping;
+        if (wait_btn_alarm() > LONGBUTTON_MS) 
+          transmit(KLESS_CMD_ANTITHIEF, HAL_NRF_0DBM, 5);
         else {
           transmit(KLESS_CMD_ALARM, HAL_NRF_0DBM, 5);
-          led_blink(10);
         }
+				led_blink(10);
       } 
       
       else if (BTN_SEAT) {
-        if (wait_btn_seat() > 5000) 
-          disable_radio = !disable_radio;
+        if (wait_btn_seat() > LONGBUTTON_MS) 
+					show_ping = !show_ping;
         else if (receive_ping(15)) {
           transmit(KLESS_CMD_SEAT, HAL_NRF_0DBM, 1);
           led_blink(10);
@@ -138,21 +142,15 @@ void led_blink(uint32_t ms) {
 }
 
 uint8_t led_read(void) {
-  return disable_radio ? !LED_1 : !LED_2;
+  return !LED_2;
 }
 
 void led_write(uint8_t state) {
-  if (disable_radio) {
-    LED_1 = !state;
-    LED_2 = 1;
-  } else {
     LED_2 = !state;
     LED_1 = 1;
-  }
 }
 
 void transmit(KLESS_CMD command, hal_nrf_output_power_t power, uint8_t retry) {
-  if (!disable_radio) {
 		make_payload(payload, command);
 		hal_aes_crypt(payload_enc, payload);
 		
@@ -160,7 +158,6 @@ void transmit(KLESS_CMD command, hal_nrf_output_power_t power, uint8_t retry) {
 		while(retry--)
 			send_payload(payload_enc, power);
 		TRANSISTOR = 1;	
-	}
 }
 
 void send_payload(uint8_t *payload, uint8_t pwr) {
@@ -179,7 +176,6 @@ void send_payload(uint8_t *payload, uint8_t pwr) {
 }
 
 uint8_t receive_pairing(void){
-  if (disable_radio) return 0;
   
   hal_nrf_set_power_mode(HAL_NRF_PWR_UP);
   hal_nrf_set_operation_mode(HAL_NRF_PRX); 
@@ -202,8 +198,6 @@ uint8_t receive_pairing(void){
 
 uint8_t receive_ping(uint8_t timeout){
   uint32_t ms = 0;
-  
-  if (disable_radio) return 0;
   
   hal_nrf_set_power_mode(HAL_NRF_PWR_UP);
   hal_nrf_set_operation_mode(HAL_NRF_PRX); 

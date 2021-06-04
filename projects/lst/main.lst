@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   MAIN                                                              04/22/2021 09:24:53 PAGE 1   
+C51 COMPILER V9.60.0.0   MAIN                                                              06/04/2021 09:29:39 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE MAIN
@@ -41,439 +41,433 @@ line level    source
   30          #define ADDR_LENGTH           5
   31          #define DATA_PAIR_LENGTH      (DATA_LENGTH + ADDR_LENGTH)
   32          
-  33          typedef enum {
-  34            KLESS_CMD_PING  = 0,
-  35            KLESS_CMD_ALARM = 1,
-  36            KLESS_CMD_SEAT  = 2
-  37          } KLESS_CMD;
-  38          
-  39          // ======================================= Global variable
-  40          static uint8_t volatile radio_busy, received, disable_radio = 0;
-  41          static uint8_t tx_address[ADDR_LENGTH] = {0x00, 0x00, 0x00, 0x00, 0xCD};
-  42          static uint8_t rx_address[ADDR_LENGTH] = {0x00, 0x00, 0x00, 0x00, 0xAB};
-  43          static uint8_t xdata payload[DATA_PAIR_LENGTH];
-  44          static uint8_t xdata payload_enc[DATA_LENGTH];
-  45          static uint32_t idata aes_key[4];
-  46          static const uint8_t idata commands[3][8] = {
-  47            { 0x5e, 0x6c, 0xa7, 0x74, 0xfd, 0xe3, 0xdf, 0xbc },
-  48            { 0xf7, 0xda, 0x4a, 0x4f, 0x65, 0x2d, 0x6e, 0xf0 },
-  49            { 0xff, 0xa6, 0xe6, 0x5a, 0x84, 0x82, 0x66, 0x4f }
-  50          };
-  51          
-  52          // ======================================= Function prototype 
-  53          void pin_init(void);
-C51 COMPILER V9.60.0.0   MAIN                                                              04/22/2021 09:24:53 PAGE 2   
+  33          #define LONGBUTTON_MS         3000
+  34          
+  35          typedef enum {
+  36            KLESS_CMD_PING      = 0,
+  37            KLESS_CMD_ALARM     = 1,
+  38            KLESS_CMD_SEAT      = 2,
+  39            KLESS_CMD_ANTITHIEF = 3
+  40          } KLESS_CMD;
+  41          
+  42          // ======================================= Global variable
+  43          static uint8_t volatile radio_busy, received;
+  44          static uint8_t tx_address[ADDR_LENGTH] = {0x00, 0x00, 0x00, 0x00, 0xCD};
+  45          static uint8_t rx_address[ADDR_LENGTH] = {0x00, 0x00, 0x00, 0x00, 0xAB};
+  46          static uint8_t xdata payload[DATA_PAIR_LENGTH];
+  47          static uint8_t xdata payload_enc[DATA_LENGTH];
+  48          static uint32_t idata aes_key[4];
+  49          static const uint8_t idata commands[4][8] = {
+  50            { 0x5e, 0x6c, 0xa7, 0x74, 0xfd, 0xe3, 0xdf, 0xbc },
+  51            { 0xf7, 0xda, 0x4a, 0x4f, 0x65, 0x2d, 0x6e, 0xf0 },
+  52            { 0xff, 0xa6, 0xe6, 0x5a, 0x84, 0x82, 0x66, 0x4f },
+  53            { 0xab, 0xf5, 0x83, 0xc4, 0xe9, 0x27, 0x0a, 0xb2 }
+C51 COMPILER V9.60.0.0   MAIN                                                              06/04/2021 09:29:39 PAGE 2   
 
-  54          void rtc_init(void);
-  55          void nrf_init(void);
-  56          void clock_and_irq_init(void);
-  57          void sleep_mode(void);
-  58          
-  59          void make_random_number(uint8_t *p);
-  60          void make_payload(uint8_t *payload, uint8_t cmd);
-  61          void send_payload(uint8_t *payload, uint8_t pwr);
-  62          void set_pairing_mode(void);
-  63          void set_normal_mode(void);
-  64          void transmit(KLESS_CMD cmd, hal_nrf_output_power_t power, uint8_t retry);
-  65          uint8_t receive_pairing(void);
-  66          uint8_t receive_ping(uint8_t timeout);
-  67          void update_flash(void);
-  68          void load_flash(void);
-  69          void led_blink(uint32_t ms);
-  70          void led_write(uint8_t state);
-  71          uint8_t led_read(void);
-  72          uint32_t wait_btn_seat(void);
-  73          uint32_t wait_btn_alarm(void);
-  74          
-  75          // ======================================= Main function 
-  76          void main(void){
-  77   1        uint8_t show_ping = 0;
-  78   1        
-  79   1        pin_init();
-  80   1        rtc_init();
-  81   1        clock_and_irq_init();
-  82   1        load_flash();
-  83   1        nrf_init();
-  84   1        hal_wdog_init(0x0300);
-  85   1      
-  86   1        while(1)  {       
-  87   2          if (BTN_ALARM || BTN_SEAT) {
-  88   3            delay_ms(100);
-  89   3      
-  90   3            if (BTN_ALARM && BTN_SEAT) {        
-  91   4              set_pairing_mode();
-  92   4      
-  93   4              if (receive_pairing()) {
-  94   5                update_flash();
-  95   5                led_write(0);
-  96   5              } else 
-  97   4                led_write(1);
-  98   4      
-  99   4              set_normal_mode();      
- 100   4              wait_btn_alarm();
- 101   4              wait_btn_seat();
- 102   4            } 
- 103   3      
- 104   3            else if (BTN_ALARM) {
- 105   4              if (wait_btn_alarm() > 5000) 
- 106   4                show_ping = !show_ping;
- 107   4              else {
- 108   5                transmit(KLESS_CMD_ALARM, HAL_NRF_0DBM, 5);
- 109   5                led_blink(10);
- 110   5              }
- 111   4            } 
- 112   3            
- 113   3            else if (BTN_SEAT) {
- 114   4              if (wait_btn_seat() > 5000) 
- 115   4                disable_radio = !disable_radio;
-C51 COMPILER V9.60.0.0   MAIN                                                              04/22/2021 09:24:53 PAGE 3   
+  54          };
+  55          
+  56          // ======================================= Function prototype 
+  57          void pin_init(void);
+  58          void rtc_init(void);
+  59          void nrf_init(void);
+  60          void clock_and_irq_init(void);
+  61          void sleep_mode(void);
+  62          
+  63          void make_random_number(uint8_t *p);
+  64          void make_payload(uint8_t *payload, uint8_t cmd);
+  65          void send_payload(uint8_t *payload, uint8_t pwr);
+  66          void set_pairing_mode(void);
+  67          void set_normal_mode(void);
+  68          void transmit(KLESS_CMD cmd, hal_nrf_output_power_t power, uint8_t retry);
+  69          uint8_t receive_pairing(void);
+  70          uint8_t receive_ping(uint8_t timeout);
+  71          void update_flash(void);
+  72          void load_flash(void);
+  73          void led_blink(uint32_t ms);
+  74          void led_write(uint8_t state);
+  75          uint8_t led_read(void);
+  76          uint32_t wait_btn_seat(void);
+  77          uint32_t wait_btn_alarm(void);
+  78          
+  79          // ======================================= Main function 
+  80          void main(void){
+  81   1        uint8_t show_ping = 0;
+  82   1        
+  83   1        pin_init();
+  84   1        rtc_init();
+  85   1        clock_and_irq_init();
+  86   1        load_flash();
+  87   1        nrf_init();
+  88   1        hal_wdog_init(0x0300);
+  89   1      
+  90   1        while(1)  {       
+  91   2          if (BTN_ALARM || BTN_SEAT) {
+  92   3            delay_ms(100);
+  93   3      
+  94   3            if (BTN_ALARM && BTN_SEAT) {        
+  95   4              set_pairing_mode();
+  96   4      
+  97   4              if (receive_pairing()) {
+  98   5                update_flash();
+  99   5                led_write(0);
+ 100   5              } else 
+ 101   4                led_write(1);
+ 102   4      
+ 103   4              set_normal_mode();      
+ 104   4              wait_btn_alarm();
+ 105   4              wait_btn_seat();
+ 106   4            } 
+ 107   3      
+ 108   3            else if (BTN_ALARM) {
+ 109   4              if (wait_btn_alarm() > LONGBUTTON_MS) 
+ 110   4                transmit(KLESS_CMD_ANTITHIEF, HAL_NRF_0DBM, 5);
+ 111   4              else {
+ 112   5                transmit(KLESS_CMD_ALARM, HAL_NRF_0DBM, 5);
+ 113   5              }
+ 114   4              led_blink(10);
+ 115   4            } 
+C51 COMPILER V9.60.0.0   MAIN                                                              06/04/2021 09:29:39 PAGE 3   
 
- 116   4              else if (receive_ping(15)) {
- 117   5                transmit(KLESS_CMD_SEAT, HAL_NRF_0DBM, 1);
- 118   5                led_blink(10);
- 119   5              }
- 120   4            } 
- 121   3          }
- 122   2                  
- 123   2          else if (receive_ping(15)) {
- 124   3            transmit(KLESS_CMD_PING, HAL_NRF_0DBM, 1);
- 125   3            if (show_ping) led_blink(10);
- 126   3          }
- 127   2      
- 128   2          hal_wdog_restart(); 
- 129   2          sleep_mode();
- 130   2        };
- 131   1      }
- 132          
- 133          // ======================================= Function declaration
- 134          void led_blink(uint32_t ms) {
- 135   1        led_write(1);
- 136   1        delay_ms(ms);
- 137   1        led_write(0);
- 138   1      }
- 139          
- 140          uint8_t led_read(void) {
- 141   1        return disable_radio ? !LED_1 : !LED_2;
+ 116   3            
+ 117   3            else if (BTN_SEAT) {
+ 118   4              if (wait_btn_seat() > LONGBUTTON_MS) 
+ 119   4                show_ping = !show_ping;
+ 120   4              else if (receive_ping(15)) {
+ 121   5                transmit(KLESS_CMD_SEAT, HAL_NRF_0DBM, 1);
+ 122   5                led_blink(10);
+ 123   5              }
+ 124   4            } 
+ 125   3          }
+ 126   2                  
+ 127   2          else if (receive_ping(15)) {
+ 128   3            transmit(KLESS_CMD_PING, HAL_NRF_0DBM, 1);
+ 129   3            if (show_ping) led_blink(10);
+ 130   3          }
+ 131   2      
+ 132   2          hal_wdog_restart(); 
+ 133   2          sleep_mode();
+ 134   2        };
+ 135   1      }
+ 136          
+ 137          // ======================================= Function declaration
+ 138          void led_blink(uint32_t ms) {
+ 139   1        led_write(1);
+ 140   1        delay_ms(ms);
+ 141   1        led_write(0);
  142   1      }
  143          
- 144          void led_write(uint8_t state) {
- 145   1        if (disable_radio) {
- 146   2          LED_1 = !state;
- 147   2          LED_2 = 1;
- 148   2        } else {
- 149   2          LED_2 = !state;
- 150   2          LED_1 = 1;
- 151   2        }
- 152   1      }
- 153          
- 154          void transmit(KLESS_CMD command, hal_nrf_output_power_t power, uint8_t retry) {
- 155   1        if (!disable_radio) {
- 156   2          make_payload(payload, command);
- 157   2          hal_aes_crypt(payload_enc, payload);
- 158   2          
- 159   2          TRANSISTOR = (command != KLESS_CMD_ALARM);
- 160   2          while(retry--)
- 161   2            send_payload(payload_enc, power);
- 162   2          TRANSISTOR = 1; 
- 163   2        }
- 164   1      }
- 165          
- 166          void send_payload(uint8_t *payload, uint8_t pwr) {
- 167   1        hal_nrf_write_tx_payload(payload, DATA_LENGTH);
- 168   1        hal_nrf_set_output_power(pwr);
- 169   1        
- 170   1        hal_nrf_set_power_mode(HAL_NRF_PWR_UP);
- 171   1        hal_nrf_set_operation_mode(HAL_NRF_PTX);
- 172   1      
- 173   1          CE_HIGH();
- 174   1          radio_busy = true;
- 175   1          while (radio_busy){}
- 176   1          CE_LOW();
- 177   1            
-C51 COMPILER V9.60.0.0   MAIN                                                              04/22/2021 09:24:53 PAGE 4   
+ 144          uint8_t led_read(void) {
+ 145   1        return !LED_2;
+ 146   1      }
+ 147          
+ 148          void led_write(uint8_t state) {
+ 149   1          LED_2 = !state;
+ 150   1          LED_1 = 1;
+ 151   1      }
+ 152          
+ 153          void transmit(KLESS_CMD command, hal_nrf_output_power_t power, uint8_t retry) {
+ 154   1          make_payload(payload, command);
+ 155   1          hal_aes_crypt(payload_enc, payload);
+ 156   1          
+ 157   1          TRANSISTOR = (command != KLESS_CMD_ALARM);
+ 158   1          while(retry--)
+ 159   1            send_payload(payload_enc, power);
+ 160   1          TRANSISTOR = 1; 
+ 161   1      }
+ 162          
+ 163          void send_payload(uint8_t *payload, uint8_t pwr) {
+ 164   1        hal_nrf_write_tx_payload(payload, DATA_LENGTH);
+ 165   1        hal_nrf_set_output_power(pwr);
+ 166   1        
+ 167   1        hal_nrf_set_power_mode(HAL_NRF_PWR_UP);
+ 168   1        hal_nrf_set_operation_mode(HAL_NRF_PTX);
+ 169   1      
+ 170   1          CE_HIGH();
+ 171   1          radio_busy = true;
+ 172   1          while (radio_busy){}
+ 173   1          CE_LOW();
+ 174   1            
+ 175   1        hal_nrf_set_power_mode(HAL_NRF_PWR_DOWN);
+ 176   1      }
+ 177          
+C51 COMPILER V9.60.0.0   MAIN                                                              06/04/2021 09:29:39 PAGE 4   
 
- 178   1        hal_nrf_set_power_mode(HAL_NRF_PWR_DOWN);
- 179   1      }
- 180          
- 181          uint8_t receive_pairing(void){
- 182   1        if (disable_radio) return 0;
- 183   1        
- 184   1        hal_nrf_set_power_mode(HAL_NRF_PWR_UP);
- 185   1        hal_nrf_set_operation_mode(HAL_NRF_PRX); 
- 186   1        
- 187   1        // Enable receiver
- 188   1        CE_HIGH();
- 189   1        received = false;
- 190   1        while (!received && (BTN_ALARM && BTN_SEAT)){
- 191   2          led_write(!led_read());
- 192   2          hal_wdog_restart();
- 193   2          delay_ms(100);
- 194   2        }
- 195   1        CE_LOW();
- 196   1        
- 197   1        hal_nrf_set_power_mode(HAL_NRF_PWR_DOWN);
- 198   1        hal_nrf_set_rx_payload_width(HAL_NRF_PIPE0, DATA_LENGTH); 
- 199   1      
- 200   1        return ((payload[DATA_PAIR_LENGTH - 1] == 0xAB));
- 201   1      }
- 202          
- 203          uint8_t receive_ping(uint8_t timeout){
- 204   1        uint32_t ms = 0;
- 205   1        
- 206   1        if (disable_radio) return 0;
- 207   1        
- 208   1        hal_nrf_set_power_mode(HAL_NRF_PWR_UP);
- 209   1        hal_nrf_set_operation_mode(HAL_NRF_PRX); 
- 210   1        
- 211   1        // Enable receiver
- 212   1        CE_HIGH();
- 213   1        received = false;
- 214   1        while (!received && (ms < timeout)){
- 215   2          delay_ms(1);
- 216   2          ms++;
- 217   2        }
- 218   1        CE_LOW();
- 219   1        
- 220   1        hal_nrf_set_power_mode(HAL_NRF_PWR_DOWN);
- 221   1        hal_nrf_set_rx_payload_width(HAL_NRF_PIPE0, DATA_LENGTH); 
- 222   1        
- 223   1        return received;
- 224   1      }
- 225          
- 226          void set_pairing_mode(void) {
- 227   1        memset(tx_address, 0x00, sizeof(uint32_t));
- 228   1        memset(rx_address, 0x00, sizeof(uint32_t));
- 229   1        
- 230   1        hal_nrf_set_address(HAL_NRF_TX, tx_address);
- 231   1        hal_nrf_set_address(HAL_NRF_PIPE0, rx_address);
- 232   1        hal_nrf_set_rx_payload_width(HAL_NRF_PIPE0, DATA_PAIR_LENGTH);
- 233   1      }
- 234          
- 235          void set_normal_mode(void) {
- 236   1        load_flash();
- 237   1        
- 238   1        hal_nrf_set_address(HAL_NRF_TX, tx_address);
- 239   1        hal_nrf_set_address(HAL_NRF_PIPE0, rx_address);
-C51 COMPILER V9.60.0.0   MAIN                                                              04/22/2021 09:24:53 PAGE 5   
+ 178          uint8_t receive_pairing(void){
+ 179   1        
+ 180   1        hal_nrf_set_power_mode(HAL_NRF_PWR_UP);
+ 181   1        hal_nrf_set_operation_mode(HAL_NRF_PRX); 
+ 182   1        
+ 183   1        // Enable receiver
+ 184   1        CE_HIGH();
+ 185   1        received = false;
+ 186   1        while (!received && (BTN_ALARM && BTN_SEAT)){
+ 187   2          led_write(!led_read());
+ 188   2          hal_wdog_restart();
+ 189   2          delay_ms(100);
+ 190   2        }
+ 191   1        CE_LOW();
+ 192   1        
+ 193   1        hal_nrf_set_power_mode(HAL_NRF_PWR_DOWN);
+ 194   1        hal_nrf_set_rx_payload_width(HAL_NRF_PIPE0, DATA_LENGTH); 
+ 195   1      
+ 196   1        return ((payload[DATA_PAIR_LENGTH - 1] == 0xAB));
+ 197   1      }
+ 198          
+ 199          uint8_t receive_ping(uint8_t timeout){
+ 200   1        uint32_t ms = 0;
+ 201   1        
+ 202   1        hal_nrf_set_power_mode(HAL_NRF_PWR_UP);
+ 203   1        hal_nrf_set_operation_mode(HAL_NRF_PRX); 
+ 204   1        
+ 205   1        // Enable receiver
+ 206   1        CE_HIGH();
+ 207   1        received = false;
+ 208   1        while (!received && (ms < timeout)){
+ 209   2          delay_ms(1);
+ 210   2          ms++;
+ 211   2        }
+ 212   1        CE_LOW();
+ 213   1        
+ 214   1        hal_nrf_set_power_mode(HAL_NRF_PWR_DOWN);
+ 215   1        hal_nrf_set_rx_payload_width(HAL_NRF_PIPE0, DATA_LENGTH); 
+ 216   1        
+ 217   1        return received;
+ 218   1      }
+ 219          
+ 220          void set_pairing_mode(void) {
+ 221   1        memset(tx_address, 0x00, sizeof(uint32_t));
+ 222   1        memset(rx_address, 0x00, sizeof(uint32_t));
+ 223   1        
+ 224   1        hal_nrf_set_address(HAL_NRF_TX, tx_address);
+ 225   1        hal_nrf_set_address(HAL_NRF_PIPE0, rx_address);
+ 226   1        hal_nrf_set_rx_payload_width(HAL_NRF_PIPE0, DATA_PAIR_LENGTH);
+ 227   1      }
+ 228          
+ 229          void set_normal_mode(void) {
+ 230   1        load_flash();
+ 231   1        
+ 232   1        hal_nrf_set_address(HAL_NRF_TX, tx_address);
+ 233   1        hal_nrf_set_address(HAL_NRF_PIPE0, rx_address);
+ 234   1        hal_nrf_set_rx_payload_width(HAL_NRF_PIPE0, DATA_LENGTH);
+ 235   1      }
+ 236          
+ 237          void make_payload(uint8_t *payload, uint8_t cmd){ 
+ 238   1        memcpy(payload, &commands[cmd], 8);
+ 239   1      }
+C51 COMPILER V9.60.0.0   MAIN                                                              06/04/2021 09:29:39 PAGE 5   
 
- 240   1        hal_nrf_set_rx_payload_width(HAL_NRF_PIPE0, DATA_LENGTH);
- 241   1      }
- 242          
- 243          void make_payload(uint8_t *payload, uint8_t cmd){ 
- 244   1        memcpy(payload, &commands[cmd], 8);
- 245   1      }
- 246          
- 247          void make_random_number(uint8_t *p){
- 248   1        uint8_t len = (DATA_LENGTH/2);
- 249   1        
- 250   1        hal_rng_power_up(1);
- 251   1        while(len--){
- 252   2          while(!hal_rng_data_ready()) {};
- 253   2          *(p++) = hal_rng_read();
- 254   2        }
- 255   1        hal_rng_power_up(0);
- 256   1      }
- 257          
- 258          uint32_t wait_btn_seat(void) {
- 259   1        uint32_t ms = 0;
+ 240          
+ 241          void make_random_number(uint8_t *p){
+ 242   1        uint8_t len = (DATA_LENGTH/2);
+ 243   1        
+ 244   1        hal_rng_power_up(1);
+ 245   1        while(len--){
+ 246   2          while(!hal_rng_data_ready()) {};
+ 247   2          *(p++) = hal_rng_read();
+ 248   2        }
+ 249   1        hal_rng_power_up(0);
+ 250   1      }
+ 251          
+ 252          uint32_t wait_btn_seat(void) {
+ 253   1        uint32_t ms = 0;
+ 254   1      
+ 255   1        while(BTN_SEAT) {
+ 256   2          hal_wdog_restart();
+ 257   2          delay_ms(50);
+ 258   2          ms+=50;
+ 259   2        }
  260   1      
- 261   1        while(BTN_SEAT) {
- 262   2          hal_wdog_restart();
- 263   2          delay_ms(50);
- 264   2          ms+=50;
- 265   2        }
+ 261   1        return ms;
+ 262   1      }
+ 263          
+ 264          uint32_t wait_btn_alarm(void) {
+ 265   1        uint32_t ms = 0;
  266   1      
- 267   1        return ms;
- 268   1      }
- 269          
- 270          uint32_t wait_btn_alarm(void) {
- 271   1        uint32_t ms = 0;
+ 267   1        while(BTN_ALARM) {
+ 268   2          hal_wdog_restart();
+ 269   2          delay_ms(50);
+ 270   2          ms+=50;
+ 271   2        }
  272   1      
- 273   1        while(BTN_ALARM) {
- 274   2          hal_wdog_restart();
- 275   2          delay_ms(50);
- 276   2          ms+=50;
- 277   2        }
- 278   1      
- 279   1        return ms;
+ 273   1        return ms;
+ 274   1      }
+ 275          
+ 276          void update_flash(void){
+ 277   1        hal_flash_page_erase(HAL_DATA_NV_FLASH_PN0);
+ 278   1        hal_flash_bytes_write(VADDR_VCU_ID, &payload[DATA_LENGTH], sizeof(uint32_t));
+ 279   1        hal_flash_bytes_write(VADDR_AES_KEY, payload, DATA_LENGTH);
  280   1      }
  281          
- 282          void update_flash(void){
- 283   1        hal_flash_page_erase(HAL_DATA_NV_FLASH_PN0);
- 284   1        hal_flash_bytes_write(VADDR_VCU_ID, &payload[DATA_LENGTH], sizeof(uint32_t));
- 285   1        hal_flash_bytes_write(VADDR_AES_KEY, payload, DATA_LENGTH);
- 286   1      }
- 287          
- 288          void load_flash(void){
- 289   1        uint8_t vcu_size = sizeof(uint32_t);
- 290   1        uint8_t vcu_id[sizeof(uint32_t)];
- 291   1        
- 292   1        hal_flash_bytes_read(VADDR_VCU_ID, vcu_id, vcu_size);
- 293   1        hal_flash_bytes_read(VADDR_AES_KEY, (uint8_t*)aes_key, DATA_LENGTH);
- 294   1        
- 295   1        memcpy(tx_address, vcu_id, vcu_size);
- 296   1        memcpy(rx_address, vcu_id, vcu_size);
- 297   1      
- 298   1        hal_aes_setup(0, ECB, (uint8_t*)aes_key, NULL);
- 299   1      }
- 300          
- 301          
-C51 COMPILER V9.60.0.0   MAIN                                                              04/22/2021 09:24:53 PAGE 6   
+ 282          void load_flash(void){
+ 283   1        uint8_t vcu_size = sizeof(uint32_t);
+ 284   1        uint8_t vcu_id[sizeof(uint32_t)];
+ 285   1        
+ 286   1        hal_flash_bytes_read(VADDR_VCU_ID, vcu_id, vcu_size);
+ 287   1        hal_flash_bytes_read(VADDR_AES_KEY, (uint8_t*)aes_key, DATA_LENGTH);
+ 288   1        
+ 289   1        memcpy(tx_address, vcu_id, vcu_size);
+ 290   1        memcpy(rx_address, vcu_id, vcu_size);
+ 291   1      
+ 292   1        hal_aes_setup(0, ECB, (uint8_t*)aes_key, NULL);
+ 293   1      }
+ 294          
+ 295          
+ 296          void pin_init(void){
+ 297   1        char i;
+ 298   1        
+ 299   1        // Disconnect unused GPIOs to avoid them floating in sleep
+ 300   1        for (i = 0; i < 8; i++) {
+ 301   2            P0CON = 0x70 + i;
+C51 COMPILER V9.60.0.0   MAIN                                                              06/04/2021 09:29:39 PAGE 6   
 
- 302          void pin_init(void){
- 303   1        char i;
- 304   1        
- 305   1        // Disconnect unused GPIOs to avoid them floating in sleep
- 306   1        for (i = 0; i < 8; i++) {
- 307   2            P0CON = 0x70 + i;
- 308   2            P1CON = 0x70 + i;
- 309   2        } 
- 310   1        P0DIR = 0x50;
- 311   1        P1DIR = 0x00; 
- 312   1      
- 313   1        P0CON = 0x00 + 3; // Set P0.3 as output again
- 314   1        P0CON = 0x00 + 2; // Set P0.2 as output again
- 315   1        P0CON = 0x50 + 6; // Set P0.6 as input again
- 316   1        P0CON = 0x50 + 4; // Set P0.4 as input again
- 317   1        P1CON = 0x00 + 4; // Set P1.4 as output again
- 318   1          
- 319   1        P0 = 0xff;
- 320   1        P1 = 0x00;
- 321   1        
- 322   1        WUOPC0 = 0x00;  //set pin P0.4 & P0.6 as wake-up pin
- 323   1      //  OPMCON = 0x00;  //latch open and wake-up pin active high
- 324   1        
- 325   1        // Set default 
- 326   1        TRANSISTOR = 1;
- 327   1        LED_1 = 1;
- 328   1        LED_2 = 1;
- 329   1      }
- 330          
- 331          void nrf_init(void){
- 332   1        hal_nrf_set_datarate(HAL_NRF_250KBPS);
- 333   1        hal_nrf_set_crc_mode(HAL_NRF_CRC_8BIT);
- 334   1        hal_nrf_set_address_width(HAL_NRF_AW_5BYTES);
- 335   1        hal_nrf_set_auto_retr(0,0);
- 336   1        hal_nrf_set_rf_channel(110);
- 337   1        hal_nrf_set_address(HAL_NRF_TX, tx_address);
- 338   1        hal_nrf_set_rx_payload_width(HAL_NRF_PIPE0, DATA_LENGTH);
- 339   1        hal_nrf_open_pipe(HAL_NRF_PIPE0, 1);
- 340   1        hal_nrf_set_address(HAL_NRF_PIPE0, rx_address);
- 341   1        //setting interupt mode
- 342   1        hal_nrf_set_irq_mode(HAL_NRF_MAX_RT,1);
- 343   1        hal_nrf_set_irq_mode(HAL_NRF_TX_DS,1);
- 344   1        hal_nrf_set_irq_mode(HAL_NRF_RX_DR,1);
- 345   1        hal_nrf_enable_ack_payload(1);
- 346   1        //clear interupt flag
- 347   1        hal_nrf_clear_irq_flag(HAL_NRF_MAX_RT);
- 348   1        hal_nrf_clear_irq_flag(HAL_NRF_TX_DS);
- 349   1        hal_nrf_clear_irq_flag(HAL_NRF_RX_DR);
- 350   1      }
- 351          
- 352          void rtc_init(void){
- 353   1        hal_rtc_start(false);
- 354   1        hal_clklf_set_source(HAL_CLKLF_RCOSC32K);
- 355   1        hal_rtc_set_compare_mode(HAL_RTC_COMPARE_MODE_0);
- 356   1        hal_rtc_set_compare_value(0xFFFF/2);
- 357   1        hal_rtc_start(true);
- 358   1      
- 359   1        // Wait for the 32kHz to startup (change phase)
- 360   1        while((CLKLFCTRL&0x80)==0x80);
- 361   1        while((CLKLFCTRL&0x80)!=0x80);
- 362   1        
- 363   1        // Setting wake-up from TICK and IRQ
-C51 COMPILER V9.60.0.0   MAIN                                                              04/22/2021 09:24:53 PAGE 7   
+ 302   2            P1CON = 0x70 + i;
+ 303   2        } 
+ 304   1        P0DIR = 0x50;
+ 305   1        P1DIR = 0x00; 
+ 306   1      
+ 307   1        P0CON = 0x00 + 3; // Set P0.3 as output again
+ 308   1        P0CON = 0x00 + 2; // Set P0.2 as output again
+ 309   1        P0CON = 0x50 + 6; // Set P0.6 as input again
+ 310   1        P0CON = 0x50 + 4; // Set P0.4 as input again
+ 311   1        P1CON = 0x00 + 4; // Set P1.4 as output again
+ 312   1          
+ 313   1        P0 = 0xff;
+ 314   1        P1 = 0x00;
+ 315   1        
+ 316   1        WUOPC0 = 0x00;  //set pin P0.4 & P0.6 as wake-up pin
+ 317   1      //  OPMCON = 0x00;  //latch open and wake-up pin active high
+ 318   1        
+ 319   1        // Set default 
+ 320   1        TRANSISTOR = 1;
+ 321   1        LED_1 = 1;
+ 322   1        LED_2 = 1;
+ 323   1      }
+ 324          
+ 325          void nrf_init(void){
+ 326   1        hal_nrf_set_datarate(HAL_NRF_250KBPS);
+ 327   1        hal_nrf_set_crc_mode(HAL_NRF_CRC_8BIT);
+ 328   1        hal_nrf_set_address_width(HAL_NRF_AW_5BYTES);
+ 329   1        hal_nrf_set_auto_retr(0,0);
+ 330   1        hal_nrf_set_rf_channel(110);
+ 331   1        hal_nrf_set_address(HAL_NRF_TX, tx_address);
+ 332   1        hal_nrf_set_rx_payload_width(HAL_NRF_PIPE0, DATA_LENGTH);
+ 333   1        hal_nrf_open_pipe(HAL_NRF_PIPE0, 1);
+ 334   1        hal_nrf_set_address(HAL_NRF_PIPE0, rx_address);
+ 335   1        //setting interupt mode
+ 336   1        hal_nrf_set_irq_mode(HAL_NRF_MAX_RT,1);
+ 337   1        hal_nrf_set_irq_mode(HAL_NRF_TX_DS,1);
+ 338   1        hal_nrf_set_irq_mode(HAL_NRF_RX_DR,1);
+ 339   1        hal_nrf_enable_ack_payload(1);
+ 340   1        //clear interupt flag
+ 341   1        hal_nrf_clear_irq_flag(HAL_NRF_MAX_RT);
+ 342   1        hal_nrf_clear_irq_flag(HAL_NRF_TX_DS);
+ 343   1        hal_nrf_clear_irq_flag(HAL_NRF_RX_DR);
+ 344   1      }
+ 345          
+ 346          void rtc_init(void){
+ 347   1        hal_rtc_start(false);
+ 348   1        hal_clklf_set_source(HAL_CLKLF_RCOSC32K);
+ 349   1        hal_rtc_set_compare_mode(HAL_RTC_COMPARE_MODE_0);
+ 350   1        hal_rtc_set_compare_value(0xFFFF/2);
+ 351   1        hal_rtc_start(true);
+ 352   1      
+ 353   1        // Wait for the 32kHz to startup (change phase)
+ 354   1        while((CLKLFCTRL&0x80)==0x80);
+ 355   1        while((CLKLFCTRL&0x80)!=0x80);
+ 356   1        
+ 357   1        // Setting wake-up from TICK and IRQ
+ 358   1        IEN1 = 0x20|0x08; 
+ 359   1      }
+ 360          
+ 361          void clock_and_irq_init(void){
+ 362   1        // Wait until 16 MHz crystal oscillator is running
+ 363   1        #ifdef MCU_NRF24LE1
+C51 COMPILER V9.60.0.0   MAIN                                                              06/04/2021 09:29:39 PAGE 7   
 
- 364   1        IEN1 = 0x20|0x08; 
- 365   1      }
- 366          
- 367          void clock_and_irq_init(void){
- 368   1        // Wait until 16 MHz crystal oscillator is running
- 369   1        #ifdef MCU_NRF24LE1
- 370   1        while(hal_clk_get_16m_source() != HAL_CLK_XOSC16M){}
- 371   1        #endif
- 372   1        // Enable the radio clock
- 373   1        RFCKEN = 1U;
- 374   1        // Enable RF irq
- 375   1        RF = 1U;
- 376   1        // Enable global irq
- 377   1        EA = 1U;
- 378   1      }
- 379          
- 380          void sleep_mode(void){
- 381   1        // Register retention mode
- 382   1        PWRDWN = 0x04;
- 383   1        // Standby mode (wait for irq)
- 384   1        PWRDWN = 0x07;
- 385   1        // Clear PWRDWN
- 386   1        PWRDWN = 0x00;
- 387   1        // Exit sleep mode
+ 364   1        while(hal_clk_get_16m_source() != HAL_CLK_XOSC16M){}
+ 365   1        #endif
+ 366   1        // Enable the radio clock
+ 367   1        RFCKEN = 1U;
+ 368   1        // Enable RF irq
+ 369   1        RF = 1U;
+ 370   1        // Enable global irq
+ 371   1        EA = 1U;
+ 372   1      }
+ 373          
+ 374          void sleep_mode(void){
+ 375   1        // Register retention mode
+ 376   1        PWRDWN = 0x04;
+ 377   1        // Standby mode (wait for irq)
+ 378   1        PWRDWN = 0x07;
+ 379   1        // Clear PWRDWN
+ 380   1        PWRDWN = 0x00;
+ 381   1        // Exit sleep mode
+ 382   1      }
+ 383          
+ 384          // ======================================= Interrupt Service Routine
+ 385          // RTC wakeup by tick
+ 386          void wakeup_tick() interrupt INTERRUPT_TICK {
+ 387   1         //LED_2 = !LED_2; 
  388   1      }
  389          
- 390          // ======================================= Interrupt Service Routine
- 391          // RTC wakeup by tick
- 392          void wakeup_tick() interrupt INTERRUPT_TICK {
- 393   1         //LED_2 = !LED_2; 
- 394   1      }
+ 390          // RTC wakeup by button
+ 391          void wakeup_irq() interrupt INTERRUPT_WUOPIRQ {
+ 392   1        // LED_1 = !LED_1;
+ 393   1      }
+ 394          
  395          
- 396          // RTC wakeup by button
- 397          void wakeup_irq() interrupt INTERRUPT_WUOPIRQ {
- 398   1        // LED_1 = !LED_1;
- 399   1      }
- 400          
- 401          
- 402          // Radio irq
- 403          NRF_ISR() {
- 404   1        uint8_t irq_flags;
- 405   1      
- 406   1        // Read and clear IRQ flags from radio
- 407   1        irq_flags = hal_nrf_get_clear_irq_flags();
- 408   1       
- 409   1        switch(irq_flags)
- 410   1        {
- 411   2          // Transmission success
- 412   2          case (1 << (uint8_t)HAL_NRF_TX_DS):
- 413   2            radio_busy = false;
- 414   2            // Data has been sent
- 415   2            break;
- 416   2          
- 417   2          // Transmission failed (maximum re-transmits)
- 418   2          case (1 << (uint8_t)HAL_NRF_MAX_RT):
- 419   2            // When a MAX_RT interrupt occurs the TX payload will not be removed from the TX FIFO.
- 420   2            // If the packet is to be discarded this must be done manually by flushing the TX FIFO.
- 421   2            // Alternatively, CE_PULSE() can be called re-starting transmission of the payload.
- 422   2            // (Will only be possible after the radio irq flags are cleared)
- 423   2            hal_nrf_flush_tx();
- 424   2            radio_busy = false;
- 425   2            break;
-C51 COMPILER V9.60.0.0   MAIN                                                              04/22/2021 09:24:53 PAGE 8   
+ 396          // Radio irq
+ 397          NRF_ISR() {
+ 398   1        uint8_t irq_flags;
+ 399   1      
+ 400   1        // Read and clear IRQ flags from radio
+ 401   1        irq_flags = hal_nrf_get_clear_irq_flags();
+ 402   1       
+ 403   1        switch(irq_flags)
+ 404   1        {
+ 405   2          // Transmission success
+ 406   2          case (1 << (uint8_t)HAL_NRF_TX_DS):
+ 407   2            radio_busy = false;
+ 408   2            // Data has been sent
+ 409   2            break;
+ 410   2          
+ 411   2          // Transmission failed (maximum re-transmits)
+ 412   2          case (1 << (uint8_t)HAL_NRF_MAX_RT):
+ 413   2            // When a MAX_RT interrupt occurs the TX payload will not be removed from the TX FIFO.
+ 414   2            // If the packet is to be discarded this must be done manually by flushing the TX FIFO.
+ 415   2            // Alternatively, CE_PULSE() can be called re-starting transmission of the payload.
+ 416   2            // (Will only be possible after the radio irq flags are cleared)
+ 417   2            hal_nrf_flush_tx();
+ 418   2            radio_busy = false;
+ 419   2            break;
+ 420   2          
+ 421   2          // Received success
+ 422   2          case (1 << (uint8_t)HAL_NRF_RX_DR):
+ 423   2            // Read payload
+ 424   2            while(!hal_nrf_rx_fifo_empty()){
+ 425   3              hal_nrf_read_rx_payload(payload);
+C51 COMPILER V9.60.0.0   MAIN                                                              06/04/2021 09:29:39 PAGE 8   
 
- 426   2          
- 427   2          // Received success
- 428   2          case (1 << (uint8_t)HAL_NRF_RX_DR):
- 429   2            // Read payload
- 430   2            while(!hal_nrf_rx_fifo_empty()){
- 431   3              hal_nrf_read_rx_payload(payload);
- 432   3            }
- 433   2            received = true;
- 434   2            break;
- 435   2            
- 436   2          default:
- 437   2            break;
- 438   2        }
- 439   1        
- 440   1      }
- 441          /** @} */
- 442          
+ 426   3            }
+ 427   2            received = true;
+ 428   2            break;
+ 429   2            
+ 430   2          default:
+ 431   2            break;
+ 432   2        }
+ 433   1        
+ 434   1      }
+ 435          /** @} */
+ 436          
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =   1357    ----
+   CODE SIZE        =   1311    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =     37    ----
    PDATA SIZE       =   ----    ----
-   DATA SIZE        =     13      33
-   IDATA SIZE       =     40    ----
+   DATA SIZE        =     12      33
+   IDATA SIZE       =     48    ----
    BIT SIZE         =   ----    ----
 END OF MODULE INFORMATION.
 
